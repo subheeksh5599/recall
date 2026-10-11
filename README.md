@@ -6,7 +6,7 @@
 
 ![status](https://img.shields.io/badge/status-design%20stage-orange) ![network](https://img.shields.io/badge/network-Monad%20testnet-836EF9) ![stack](https://img.shields.io/badge/stack-Solidity%20%C2%B7%20Foundry%20%C2%B7%20Next.js-14151a) ![license](https://img.shields.io/badge/license-MIT-yellow)
 
-[The rule](#the-rule) · [Why Monad](#why-monad) · [Attack → test](#attack--test) · [Honesty table](#whats-real-vs-pending--the-honesty-table)
+[The rule](#the-rule) · [Why Monad](#why-monad) · [Evidence](docs/EVIDENCE.md) · [Attack → test](#attack--test) · [Honesty table](#whats-real-vs-pending--the-honesty-table)
 
 </div>
 
@@ -88,6 +88,9 @@ Plain words: snipers lose, fair customers still get filled.
 - **The usual fix hands the maker a free option.** Letting every cancel jump every trade protects
   the maker against snipers, but also lets a maker who sees a fair order coming pull the quote and
   dodge it. RECALL keeps the protection and removes the dodge.
+
+Sources for every claim in this section, including trader posts, research and the venues that
+already enforce cancel priority: [docs/EVIDENCE.md](docs/EVIDENCE.md).
 
 ## What RECALL is NOT
 
