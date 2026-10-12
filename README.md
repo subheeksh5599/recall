@@ -6,7 +6,9 @@
 
 ![status](https://img.shields.io/badge/status-live%20on%20testnet-e42b0c) ![tests](https://img.shields.io/badge/forge%20tests-30%20passing-0f7a3d) ![network](https://img.shields.io/badge/network-Monad%20testnet-836EF9) ![stack](https://img.shields.io/badge/stack-Solidity%20%C2%B7%20Foundry%20%C2%B7%20viem-14151a) ![license](https://img.shields.io/badge/license-MIT-yellow)
 
-[Console](#run-it) · [Live races](#live-races-on-monad-testnet) · [The rule](#the-rule) · [Why Monad](#why-monad) · [Evidence](docs/EVIDENCE.md) · [Attack → test](#attack--test) · [Honesty table](#whats-real-vs-pending--the-honesty-table)
+**[Live site](https://different-skunk-560.convex.site) · [Console](https://different-skunk-560.convex.site/app/index.html)** ·
+
+[Run it](#run-it) · [Live races](#live-races-on-monad-testnet) · [The rule](#the-rule) · [Why Monad](#why-monad) · [Evidence](docs/EVIDENCE.md) · [Attack → test](#attack--test) · [Honesty table](#whats-real-vs-pending--the-honesty-table)
 
 </div>
 
@@ -99,7 +101,9 @@ the take only queued, so the cancel, landing second, still won. Full receipts ar
 
 ## Run it
 
-**Console.** `site/` is a static site; serve it and open `/app/`:
+**Hosted.** https://different-skunk-560.convex.site (landing) and `/app/index.html` (console), served by Convex static hosting from `hosting/` (`cd hosting && npx convex deploy -y && npx @convex-dev/static-hosting deploy --skip-convex`).
+
+**Console locally.** `site/` is a static site; serve it and open `/app/`:
 
 ```bash
 cd site && python3 -m http.server 4319   # then open http://127.0.0.1:4319/app/
