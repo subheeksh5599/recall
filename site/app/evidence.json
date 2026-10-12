@@ -1,0 +1,147 @@
+[
+ {
+  "book": "0x4Fa264Efc5DDa93c51f98cB9d5A25E81b4801916",
+  "cancelFirst": true,
+  "mode": "dodge",
+  "staleBps": 5,
+  "move": 0,
+  "target": "11",
+  "sniperFilled": true,
+  "sniperFoundNothing": false,
+  "staleCancel": false,
+  "deferredCancel": true,
+  "take": {
+   "hash": "0x993a31587ea733ab2d80567868f452588118430ac31e83b03866857be3578b6c",
+   "block": "70368409",
+   "index": 1
+  },
+  "cancel": {
+   "hash": "0xb9426a7c806e481379ea40c0b5f1c08594a46c493a3f713b3ccbc0b9dbb919fb",
+   "block": "70368409",
+   "index": 3
+  },
+  "settle": "0x524140a3c02f381be7d27cce5e6508f0cdc100d177b6ba36466618a32854872a",
+  "posts": [
+   "0x540ca1391d9ed951997aeaec0cd0f868facafdc6b860c86b05e2168108bdc58d",
+   "0x26936cc81f8d11829d7f89deeb52aaaf2e973e9383e659f1dad3fac0aae895a0"
+  ],
+  "seconds": 20,
+  "when": 1791799325599
+ },
+ {
+  "book": "0xbAf5dAE1f616F41cc0Acad3794359205bd00FCCd",
+  "cancelFirst": false,
+  "mode": "snipe",
+  "staleBps": 5,
+  "move": 5.01,
+  "target": "4",
+  "sniperFilled": true,
+  "sniperFoundNothing": false,
+  "staleCancel": false,
+  "deferredCancel": false,
+  "take": {
+   "hash": "0x22fe94e427fc4332ac4d42bea6890a5bbe2f5add3d6bfb60fe496b4949e2633b",
+   "block": "70367895",
+   "index": 1
+  },
+  "cancel": {
+   "hash": "0x474bb85d47bfc42e2df9ae130f2fd3c7262ce98cf503b70e8b7b393db467eb90",
+   "block": "70367895",
+   "index": 5
+  },
+  "settle": null,
+  "posts": [
+   "0x315ceafb082bd59af0ae4c3782f01d9f21c9074693088c9b1ce0bdc5e3a70aee",
+   "0x2c59860a594ae49d36de22eb526c7a3bbecd4321cbea6b52d1d3edd2c17d51c7"
+  ],
+  "seconds": 66,
+  "when": 1791799164319
+ },
+ {
+  "book": "0x4Fa264Efc5DDa93c51f98cB9d5A25E81b4801916",
+  "cancelFirst": true,
+  "mode": "snipe",
+  "staleBps": 5,
+  "move": 11.11,
+  "target": "9",
+  "sniperFilled": false,
+  "sniperFoundNothing": true,
+  "staleCancel": true,
+  "deferredCancel": false,
+  "take": {
+   "hash": "0xf90b79285e4ec975a63d56734ab8fe21609d99a3469235983b98f36f5e548e64",
+   "block": "70367163",
+   "index": 1
+  },
+  "cancel": {
+   "hash": "0x12dee6bb73f6ae6939f679e47aaf0591a7691e7099bf1684959d3e90515927be",
+   "block": "70367163",
+   "index": 3
+  },
+  "settle": "0xf68e1ba52a8992782991fd4531445e2f29db6710b30d7221d7c6c17783163bf7",
+  "posts": [
+   "0xae77bdfab7e36e5867f387fac669b36084b7c070a93fd5885eaa0b721d8d435e",
+   "0x0733953f71d4a7705b802d267dc9c5c4e8cc717bbd99cd04e62a66d1a6acbf75"
+  ],
+  "seconds": 18,
+  "when": 1791798948340
+ },
+ {
+  "book": "0xbAf5dAE1f616F41cc0Acad3794359205bd00FCCd",
+  "cancelFirst": false,
+  "mode": "snipe",
+  "staleBps": 5,
+  "move": 5.14,
+  "target": "2",
+  "sniperFilled": true,
+  "sniperFoundNothing": false,
+  "staleCancel": false,
+  "deferredCancel": false,
+  "take": {
+   "hash": "0xb52dfa8ff8d62889d94128c8c9ec4d57b7e3608e6773576f2ca39eef484193fb",
+   "block": "70355992",
+   "index": 1
+  },
+  "cancel": {
+   "hash": "0xd1f00ff2664b3c5258c6df4bbe13d5b05aa8c8520b05ae9576da8c0b2f3bef74",
+   "block": "70355992",
+   "index": 7
+  },
+  "settle": null,
+  "posts": [
+   "0x289b7611324264111c6b2587e4d42e4908896f4bb75ffbb316477c9484c896c1",
+   "0x106e574204a6a9da4bc6a2a6e3bbaec76440ccdd4fd0d27fecc27294f7c8b133"
+  ],
+  "seconds": 70,
+  "when": 1791795572243
+ },
+ {
+  "book": "0x4Fa264Efc5DDa93c51f98cB9d5A25E81b4801916",
+  "cancelFirst": true,
+  "mode": "snipe",
+  "staleBps": 5,
+  "move": 5.88,
+  "target": "2",
+  "sniperFilled": false,
+  "sniperFoundNothing": true,
+  "staleCancel": true,
+  "deferredCancel": false,
+  "take": {
+   "hash": "0x85fbe8d487ae3a9847e28fc73b16b6c6b2b2a98fad5036bf673d9b30e05bac6b",
+   "block": "70355690",
+   "index": 1
+  },
+  "cancel": {
+   "hash": "0xb682541fa9855cf79cd6c3487d81ab16800526207c73a86ab19a95a5478f9984",
+   "block": "70355690",
+   "index": 3
+  },
+  "settle": "0xf19df49867cd6158c7191152607f5a6b4c0d2cd51ad760f35429135d89c84b29",
+  "posts": [
+   "0x9b57f147e79315199d9c50f46228311c011f457e08d4cb90e2f552c4f503c0b3",
+   "0x0743090d56f9f8dd77ef99dedd5eb8fc12249f8dd38e4accb48cd5ff17c95e1b"
+  ],
+  "seconds": 68,
+  "when": 1791795485243
+ }
+]

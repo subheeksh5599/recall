@@ -1,0 +1,28 @@
+{
+  "book": "0x4Fa264Efc5DDa93c51f98cB9d5A25E81b4801916",
+  "cancelFirst": true,
+  "mode": "snipe",
+  "staleBps": 5,
+  "move": 5.88,
+  "target": "2",
+  "sniperFilled": false,
+  "sniperFoundNothing": true,
+  "staleCancel": true,
+  "deferredCancel": false,
+  "take": {
+    "hash": "0x85fbe8d487ae3a9847e28fc73b16b6c6b2b2a98fad5036bf673d9b30e05bac6b",
+    "block": "70355690",
+    "index": 1
+  },
+  "cancel": {
+    "hash": "0xb682541fa9855cf79cd6c3487d81ab16800526207c73a86ab19a95a5478f9984",
+    "block": "70355690",
+    "index": 3
+  },
+  "settle": "0xf19df49867cd6158c7191152607f5a6b4c0d2cd51ad760f35429135d89c84b29",
+  "posts": [
+    "0x9b57f147e79315199d9c50f46228311c011f457e08d4cb90e2f552c4f503c0b3",
+    "0x0743090d56f9f8dd77ef99dedd5eb8fc12249f8dd38e4accb48cd5ff17c95e1b"
+  ],
+  "seconds": 68
+}

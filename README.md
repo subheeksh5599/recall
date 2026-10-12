@@ -4,15 +4,15 @@
 
 ### An order book on Monad where pulling a stale quote beats the sniper, and only a stale quote.
 
-![status](https://img.shields.io/badge/status-design%20stage-orange) ![network](https://img.shields.io/badge/network-Monad%20testnet-836EF9) ![stack](https://img.shields.io/badge/stack-Solidity%20%C2%B7%20Foundry%20%C2%B7%20Next.js-14151a) ![license](https://img.shields.io/badge/license-MIT-yellow)
+![status](https://img.shields.io/badge/status-live%20on%20testnet-e42b0c) ![tests](https://img.shields.io/badge/forge%20tests-30%20passing-0f7a3d) ![network](https://img.shields.io/badge/network-Monad%20testnet-836EF9) ![stack](https://img.shields.io/badge/stack-Solidity%20%C2%B7%20Foundry%20%C2%B7%20viem-14151a) ![license](https://img.shields.io/badge/license-MIT-yellow)
 
-[The rule](#the-rule) · [Why Monad](#why-monad) · [Evidence](docs/EVIDENCE.md) · [Attack → test](#attack--test) · [Honesty table](#whats-real-vs-pending--the-honesty-table)
+[Console](#run-it) · [Live races](#live-races-on-monad-testnet) · [The rule](#the-rule) · [Why Monad](#why-monad) · [Evidence](docs/EVIDENCE.md) · [Attack → test](#attack--test) · [Honesty table](#whats-real-vs-pending--the-honesty-table)
 
 </div>
 
-**Status: design stage.** Nothing is deployed and no contract code exists yet. This file is the
-specification the build has to meet. Every row in the live status table below says what is still
-missing, and it changes only when a transaction or a test exists to point at.
+**Status: deployed on Monad testnet.** Both books, the signed-price verifier and the quote token
+are live. The console in `site/app` trades against them from any browser wallet, and the race
+below was run on both books with real transactions. The rows that are still open say so.
 
 A market maker posts prices. The market moves. The maker sends a cancel; a sniper sends a trade
 against the old price. On an ordinary on-chain book the transaction with the bigger fee usually
@@ -31,13 +31,13 @@ The contract tells them apart from a signed price, not from anyone's say-so.
 
 | Surface | Status | The evidence |
 |---|---|---|
-| Book contract | not written | nothing yet |
-| Price-gated cancel | specified below | nothing yet |
-| Attack suite | specified below | nothing yet |
-| Monad testnet deployment | not deployed | nothing yet |
-| Maker and sniper bots | not written | nothing yet |
-| Side-by-side dashboard | not built | nothing yet |
-| Measured stale-fill loss on a live Monad book | not measured | nothing yet |
+| Book contract (`contracts/src/RecallBook.sol`) | deployed twice: rule on, rule off | [Deployments](#deployments) |
+| Price-gated cancel | live, verifying real signed MON/USD packages | `SignedPriceReal.t.sol` + every race below |
+| Attack suite | 30 Foundry tests incl. fuzz + 2 invariants, all passing | `forge test` in `contracts/` |
+| Monad testnet deployment | 4 contracts, chain 10143 | [Deployments](#deployments) |
+| Maker and sniper | `app/scripts/race.mjs` and the console's Race Lab | [Live races](#live-races-on-monad-testnet) |
+| Console (sidebar dashboard) | trades, cancels, settles, races; reads only the chain | [Run it](#run-it) |
+| Measured stale-fill loss on a live Monad book | not measured | still open |
 
 ## The 20-second pitch
 
@@ -49,8 +49,90 @@ live in a plain contract with nothing changed in the chain. RECALL adds one thin
 lacks: a cancel only jumps the queue when a signed price shows the quote went stale, so a maker
 cannot use it to back out of a fair trade.
 
+## Deployments
+
+Monad testnet, chain id 10143. Deployed from `0x5686C606bB9ea46d46ED76F2Aaf3686913BAd4A3`.
+
+| Contract | Address | Config |
+|---|---|---|
+| `RecallBook` (rule on) | `0x4Fa264Efc5DDa93c51f98cB9d5A25E81b4801916` | `cancelFirst = true`, delay 2 blocks, stale at 5 bps |
+| `RecallBook` (rule off) | `0xbAf5dAE1f616F41cc0Acad3794359205bd00FCCd` | `cancelFirst = false`, same code |
+| `SignedPrice` | `0xfD07A97627dB012D09AE6515dF7a46F008483Afa` | MON/USD, 3 of 5 signers, packages valid 60 s |
+| `TestUSD` (quote) | `0x7Ad795D2ae9E554E50f8f5342C0787E5146322C3` | no owner, 1,000 per address per hour |
+| WMON (base) | `0xFb8bf4c1CC7a94c73D209a149eA2AbEa852BC541` | the chain's own wrapped MON |
+
+Deploy transactions: `contracts/broadcast/Deploy.s.sol/10143/run-latest.json`.
+
+The signed prices are real: five independent signers publish MON/USD packages to a public gateway
+every 10 seconds, and `SignedPrice` checks each signature, rejects unknown, repeated, malleable,
+mixed-time, future and expired packages, and takes the median of three. The 5 bps threshold is set
+from the feed's own movement: over two minutes of samples, 10-second steps were 0–4 bps and a 5 bps
+move from a posted price arrived within about a minute.
+
+## Live races on Monad testnet
+
+The maker quotes both sides at the signed price. When the real price moves past 5 bps, the sniper
+sends a take at 50× the priority fee (100 gwei against 2 gwei) and the maker sends an ordinary cancel
+carrying the new signed price, at the same instant.
+
+| Book | Move | Sniper take (block · index) | Maker cancel (block · index) | Outcome |
+|---|---|---|---|---|
+| Rule off | 5.14 bps | `0xb52dfa8f…3f193fb` · #70355992 · 1 | `0xd1f00ff2…f3bef74` · #70355992 · 7 | **Take filled the stale quote.** Cancel arrived to a filled order (`CancelTooLate`). |
+| RECALL | 5.88 bps | `0x85fbe8d4…e05bac6b` · #70355690 · 1 | `0xb682541f…478f9984` · #70355690 · 3 | **Take found nothing.** Cancel removed the quote (`Cancelled`, stale) and the take was refunded at settlement (`0xf19df498…5d89c84b29`). |
+
+The same three scenarios were then run again from the console's Race Lab in a headless browser
+(`app/scripts/e2e-race.mjs`, the wallet bridged to a local key):
+
+| Book | Scenario | Take (block · index) | Cancel (block · index) | What the chain recorded |
+|---|---|---|---|---|
+| RECALL | snipe, 11.11 bps | #70367163 · 1 | #70367163 · 3 | `TakeQueued`, `Cancelled` (stale), `FoundNothing` at #70367175 |
+| Rule off | snipe, 5.01 bps | #70367895 · 1 | #70367895 · 5 | `TakeQueued`, `Filled`, `CancelTooLate` |
+| RECALL | dodge, 0 bps | #70368409 · 1 | #70368409 · 3 | `TakeQueued`, `CancelDeferred`, `Filled` at #70368423 |
+
+`node app/scripts/verify-evidence.mjs` re-reads every recorded run from chain receipts and prints
+the events above.
+
+Read the indices: on both books the sniper's higher fee put its take **ahead** of the cancel in the
+same block, exactly as fee ordering intends. On the ordinary book that was the end of it. On RECALL
+the take only queued, so the cancel, landing second, still won. Full receipts are in
+`app/evidence/*.json` and the console's Overview page lists every recorded run with explorer links.
+
+## Run it
+
+**Console.** `site/` is a static site; serve it and open `/app/`:
+
+```bash
+cd site && python3 -m http.server 4319   # then open http://127.0.0.1:4319/app/
+```
+
+| Page | What you can do |
+|---|---|
+| Overview | both books' counters (fills, takes that found nothing, stale cancels, deferred dodges), recorded races |
+| Trade | connect any EVM wallet (Monad testnet is added for you), wrap MON, claim tUSD, approve, post a quote with the live signed price attached, buy or sell into a quote, cancel (a fresh signed price is attached when a take is waiting), settle the queue |
+| Race Lab | fund two race wallets from your wallet, prepare them, run snipe or dodge on either book, watch the move meter and the block/index of each transaction, sweep the funds back |
+| Activity | a live tail of book events and every take each book has queued |
+| Contracts | addresses, parameters and the signer set, read from the chain |
+
+**Contracts.**
+
+```bash
+cd contracts && forge test                     # 30 tests
+WMON=0xFb8b... STALE_BPS=5 ./script/with-account.sh bash -c \
+  'forge script script/Deploy.s.sol --rpc-url https://testnet-rpc.monad.xyz \
+   --private-key "$PRIVATE_KEY" --sender "$DEPLOYER" --broadcast --slow'
+```
+
+**Browser end-to-end.** `PLAYWRIGHT_DIR=<node_modules with playwright> node app/scripts/e2e-race.mjs recall snipe`
+drives the console itself and saves a screenshot next to the receipts.
+
+**Race from the terminal.** `cd app && npm i && node scripts/race.mjs recall snipe` (or `plain`,
+`dodge`). Keys are read from `~/.config/recall/`, never from the repo.
+
 ## Table of contents
 
+- [Deployments](#deployments)
+- [Live races on Monad testnet](#live-races-on-monad-testnet)
+- [Run it](#run-it)
 - [The rule](#the-rule)
 - [The problem I set out to solve](#the-problem-i-set-out-to-solve)
 - [What RECALL is NOT](#what-recall-is-not)
@@ -138,52 +220,51 @@ The check is arithmetic over two signed numbers and a threshold. No model, no ke
 
 ## Where the guarantee is enforced
 
-| Guarantee | Where it will live | The test that will cover it |
+| Guarantee | Where it lives | Test |
 |---|---|---|
-| A take never matches in its own block | the take path | planned |
-| Older takes always settle before newer calls act | the settlement loop | planned |
-| A stale-proven cancel removes the quote before a waiting take | the cancel path | planned |
-| A cancel without a stale proof cannot dodge a waiting take | the cancel path | planned |
-| Per-call work and per-block queue stay bounded | the settlement loop | planned |
-| Funds in = funds out across every fill, cancel and refund | the book's accounting | planned invariant |
+| A take never matches in its own block | `take()` queues; `_settle` waits `delay` blocks | `test_TakeNeverMatchesInItsOwnBlock` |
+| Older takes always settle before newer calls act | `_settle` at the top of every call | `test_OlderTakesSettleBeforeANewCallActs`, `test_OldestTakeSettlesFirst` |
+| A stale-proven cancel removes the quote before a waiting take | `cancel()` stale branch | `test_FeeRace_StaleCancelBeatsAWaitingTake` |
+| A cancel without a stale proof cannot dodge a waiting take | `cancel()` deferred branch | `test_Dodge_CancelWithoutAMoveWaitsForTheTrade`, `test_Dodge_CancelWithNoPriceAtAllWaits` |
+| Per-call work and per-block queue stay bounded | `WORK_CAP`, `MAX_PER_BLOCK`, backlog refusal | `test_QueueFlood_*`, `test_Backlog_*` |
+| Funds in = funds out across every fill, cancel and refund | escrow per order and per take | `testFuzz_Conservation`, `invariant_BookHoldsExactlyWhatItOwes` |
 
 ## Attack → test
 
 | The attack | What should happen | Test |
 |---|---|---|
-| Sniper pays 50× the fee to beat a stale-price cancel | cancel wins, take finds nothing | planned |
-| Maker sees a waiting fair trade and cancels to dodge it | take fills, cancel applies after | planned |
-| Maker forges or replays a signed price | cancel rejected | planned |
-| Maker uses an old signed price | rejected past `maxAge` | planned |
-| Someone floods the queue to stall settlement | queue cap refuses the excess | planned |
-| Settlement backlog grows past the per-call cap | new takes refused until cleared, cancels still work | planned |
-| Block producer drops the cancel from one block | with `D = 2`, a cancel in the next block still lands first | planned |
+| Sniper pays 50× the fee to beat a stale-price cancel | cancel wins, take finds nothing | `test_FeeRace_StaleCancelBeatsAWaitingTake` + live race above |
+| Maker sees a waiting fair trade and cancels to dodge it | take fills, cancel applies after | `test_Dodge_*` |
+| Maker forges, tampers or replays a signed price | cancel rejected | `test_BadPrice_Forged…`, `…Tampered…`, `…ReplayOfThePostPrice…`, `…OneSignerTwice…`, `…Malleable…`, `…MixedTimestamps…` |
+| Maker uses an old or future-dated signed price | rejected past `maxAge` / beyond 60 s skew | `test_BadPrice_ExpiredPackageRejected`, `…FuturePackageRejected` |
+| Someone floods the queue to stall settlement | queue cap refuses the excess | `test_QueueFlood_PerBlockCapRefusesTheExcess` |
+| Settlement backlog grows past the per-call cap | new takes refused until cleared, cancels still work | `test_Backlog_RefusesNewTakesButCancelsAndPostsRun` |
+| Block producer drops the cancel from one block | with `D = 2`, a cancel in the next block still lands first | `test_DroppedCancel_NextBlockCancelStillLandsFirst` |
 
-## What the demo will show
+## What the demo shows
 
-Two books side by side on Monad testnet, same contract, one with the rule switched off. A maker
-bot quotes around a live signed price; a sniper bot watches the same price. When the price jumps,
-the sniper sends a take with fifty times the fee and the maker sends an ordinary cancel.
+Two books on Monad testnet, same contract, one with the rule switched off, driven from the console's
+Race Lab or `app/scripts/race.mjs`.
 
 - Ordinary book: the sniper fills the stale quote.
 - RECALL: the cancel lands first and the sniper finds nothing.
-- Then a fair order arrives and the maker tries to cancel against it with no price move. RECALL
-  fills it anyway.
+- Dodge: the maker cancels against a fair take with no price move. RECALL defers the cancel and the
+  take fills.
 
-Across a hundred rounds the dashboard will report fills, refused takes, cancels, volume, the spread
-after each fill and maker profit, on both books, so the comparison cannot look good just because
-trades were refused.
+The Overview page counts fills, takes that found nothing, stale cancels and deferred dodges on both
+books from contract state, so the comparison cannot look good just because trades were refused.
 
 ## What's real vs pending — the honesty table
 
 | Claim | State |
 |---|---|
-| The rule as specified above | written here, not implemented |
-| Snipers lose on RECALL | not yet shown |
-| Fair trades still fill | not yet shown |
-| Makers can quote tighter | not yet measured |
+| The rule as specified above | implemented, deployed, 30 tests passing |
+| Snipers lose on RECALL | shown on chain (race table above) and in tests |
+| Fair trades still fill | shown in tests (`test_Dodge_*`) and runnable live from the Race Lab |
+| Makers can quote tighter | not yet measured: needs many rounds and a spread model |
 | A dollar figure for stale-quote losses on a live Monad book today | not yet measured |
 | The rule beats a colluding block producer | not claimed |
+| The quote token is real money | no: `TestUSD` is a capped testnet claim token |
 
 ## Limitations
 
@@ -194,14 +275,17 @@ trades were refused.
 - **The staleness threshold is a policy.** Set too low, makers cancel on noise; set too high, a
   real move goes unprotected.
 - **Signed prices are trusted for what they say.** A wrong signed price makes a wrong staleness
-  call.
+  call. Three of the five fixed signers must agree on one timestamp.
+- **A maker with no taker waiting cancels freely.** The gate only matters while a take is queued,
+  which is the only moment a cancel can hurt anyone.
+- **Race wallets live in browser storage.** The console says so and offers a key backup and a sweep.
 
 ## Build plan
 
-1. The book contract with the rule above, behind a switch that turns it into an ordinary book.
-2. Foundry tests: one per attack row, plus fuzzing and a funds-in = funds-out invariant.
-3. Deploy to Monad testnet and run the maker and sniper bots against both books.
-4. The side-by-side dashboard, reading only the chain.
+1. ~~The book contract with the rule, behind a switch that turns it into an ordinary book.~~
+2. ~~Foundry tests: one per attack row, plus fuzzing and a funds-in = funds-out invariant.~~
+3. ~~Deploy to Monad testnet and run maker and sniper against both books.~~
+4. ~~The sidebar console, reading only the chain.~~
 5. Measure stale fills on a live Monad book from its own trade history.
 
 ## License
