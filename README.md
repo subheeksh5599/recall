@@ -4,11 +4,11 @@
 
 ### An order book on Monad where pulling a stale quote beats the sniper, and only a stale quote.
 
-![status](https://img.shields.io/badge/status-live%20on%20testnet-e42b0c) ![tests](https://img.shields.io/badge/forge%20tests-30%20passing-0f7a3d) ![network](https://img.shields.io/badge/network-Monad%20testnet-836EF9) ![stack](https://img.shields.io/badge/stack-Solidity%20%C2%B7%20Foundry%20%C2%B7%20viem-14151a) ![license](https://img.shields.io/badge/license-MIT-yellow)
+![status](https://img.shields.io/badge/status-live%20on%20testnet-e42b0c) ![tests](https://img.shields.io/badge/forge%20tests-30%20passing-0f7a3d) ![verified](https://img.shields.io/badge/source-verified%20exact%20match-0f7a3d) ![network](https://img.shields.io/badge/network-Monad%20testnet-836EF9) ![stack](https://img.shields.io/badge/stack-Solidity%20%C2%B7%20Foundry%20%C2%B7%20viem-14151a) ![license](https://img.shields.io/badge/license-MIT-yellow)
 
 **[Live site](https://different-skunk-560.convex.site) · [Console](https://different-skunk-560.convex.site/app/index.html)** ·
 
-[Run it](#run-it) · [Live races](#live-races-on-monad-testnet) · [The rule](#the-rule) · [Why Monad](#why-monad) · [Evidence](docs/EVIDENCE.md) · [Attack → test](#attack--test) · [Honesty table](#whats-real-vs-pending--the-honesty-table)
+[Run it](#run-it) · [Measured on mainnet](#measured-on-a-live-monad-book) · [Live races](#live-races-on-monad-testnet) · [The rule](#the-rule) · [Why Monad](#why-monad) · [Evidence](docs/EVIDENCE.md) · [Attack → test](#attack--test) · [Honesty table](#whats-real-vs-pending--the-honesty-table)
 
 </div>
 
@@ -39,7 +39,9 @@ The contract tells them apart from a signed price, not from anyone's say-so.
 | Monad testnet deployment | 4 contracts, chain 10143 | [Deployments](#deployments) |
 | Maker and sniper | `app/scripts/race.mjs` and the console's Race Lab | [Live races](#live-races-on-monad-testnet) |
 | Console (sidebar dashboard) | trades, cancels, settles, races; reads only the chain | [Run it](#run-it) |
-| Measured stale-fill loss on a live Monad book | not measured | still open |
+| Measured stale-fill loss on a live Monad book | measured: 24 h, 5,188 fills, every fill priced against a 1-second outside reference | [Measured on a live Monad book](#measured-on-a-live-monad-book) |
+| Source verification | all 4 deployed contracts, exact match (creation + runtime) | [Deployments](#deployments) |
+| CI | `forge build` + `forge test` on every push | `.github/workflows/test.yml` |
 
 ## The 20-second pitch
 
@@ -50,6 +52,35 @@ Monad a block is about 0.4 seconds, so a trade waiting one block barely notices,
 live in a plain contract with nothing changed in the chain. RECALL adds one thing the old rule
 lacks: a cancel only jumps the queue when a signed price shows the quote went stale, so a maker
 cannot use it to back out of a fair trade.
+
+## Measured on a live Monad book
+
+Before building the fix, the cost had to be real on Monad, not only in papers. `app/scripts/measure-live-book.mjs`
+pulls every fill from a live MON/USDC order book on Monad mainnet (`0x065C9d28E428A0db40191a54d33d5b7c71a9C394`)
+and prices each one against a deep outside market's public 1-second MON/USDT price, with the median
+stablecoin basis (−10.05 bps) removed. Raw output: `app/evidence/live-book-measurement.json` and
+`live-book-fills.json` (one row per fill, with tx hash).
+
+24 hours, blocks 112,552,814 → 112,768,814:
+
+| | |
+|---|---|
+| Fills | 5,188, $457,208 traded |
+| Filled when the outside price was already ≥ 10 bps through the quote | **774 fills, 14.9%**, $31,570 notional, makers gave up $45.53 |
+| … ≥ 25 bps through | 9 fills, $2.02 |
+| Makers' net result at +1 s / +30 s | +2.51 bps / +1.24 bps of volume |
+| Loss on the losing fills at +30 s | $197.05 |
+| Quote churn (sample of 3,000 blocks) | 8,513 orders posted and 4,683 cancel transactions for 69 fills, about **123 orders per fill** |
+
+What this says, plainly:
+
+- One fill in seven lands on a quote the market has already moved through. That is the stale-quote
+  pick-off RECALL is built to stop, happening on Monad today.
+- The dollar loss on this book is small, because makers here quote small and survive it: they still
+  end up ahead overall, and they pay for that with constant re-posting, roughly 123 orders for every fill.
+  The cost shows up as churn and thin size more than as a large loss.
+- The measurement is approximate: 1-second resolution, an off-chain reference, and a 10 bps line that
+  sits close to the noise. It is a lower bound on picking-off at sub-second scale, not a precise figure.
 
 ## Deployments
 
@@ -63,7 +94,22 @@ Monad testnet, chain id 10143. Deployed from `0x5686C606bB9ea46d46ED76F2Aaf36869
 | `TestUSD` (quote) | `0x7Ad795D2ae9E554E50f8f5342C0787E5146322C3` | no owner, 1,000 per address per hour |
 | WMON (base) | `0xFb8bf4c1CC7a94c73D209a149eA2AbEa852BC541` | the chain's own wrapped MON |
 
-Deploy transactions: `contracts/broadcast/Deploy.s.sol/10143/run-latest.json`.
+Deploy transactions: `contracts/broadcast/Deploy.s.sol/10143/run-latest.json`. All four contracts are
+source-verified with an exact match on both creation and runtime bytecode
+([check](https://sourcify.dev/server/v2/contract/10143/0x4Fa264Efc5DDa93c51f98cB9d5A25E81b4801916)).
+
+**Gas charged per action** (Monad charges the limit; medians from the race receipts,
+`node app/scripts/gas-report.mjs`):
+
+| Action | RECALL | Ordinary |
+|---|---|---|
+| Post a quote | 324,742 | 368,197 |
+| Take | 258,229 (queues) | 346,841 (fills) |
+| Cancel | 313,321 (stale, overtakes) · 287,289 (deferred) | 312,802 |
+| Settle the queue | 150,512 | — |
+
+A RECALL take is cheaper at submission because it only queues; the fill is paid for by whichever
+call settles it.
 
 The signed prices are real: five independent signers publish MON/USD packages to a public gateway
 every 10 seconds, and `SignedPrice` checks each signature, rejects unknown, repeated, malleable,
@@ -117,6 +163,8 @@ cd site && python3 -m http.server 4319   # then open http://127.0.0.1:4319/app/
 | Activity | a live tail of book events and every take each book has queued |
 | Contracts | addresses, parameters and the signer set, read from the chain |
 
+**Measure a live Monad book.** `cd app && node scripts/measure-live-book.mjs 24` (public endpoints only, ~10 min).
+
 **Contracts.**
 
 ```bash
@@ -134,6 +182,7 @@ drives the console itself and saves a screenshot next to the receipts.
 
 ## Table of contents
 
+- [Measured on a live Monad book](#measured-on-a-live-monad-book)
 - [Deployments](#deployments)
 - [Live races on Monad testnet](#live-races-on-monad-testnet)
 - [Run it](#run-it)
@@ -266,7 +315,7 @@ books from contract state, so the comparison cannot look good just because trade
 | Snipers lose on RECALL | shown on chain (race table above) and in tests |
 | Fair trades still fill | shown in tests (`test_Dodge_*`) and runnable live from the Race Lab |
 | Makers can quote tighter | not yet measured: needs many rounds and a spread model |
-| A dollar figure for stale-quote losses on a live Monad book today | not yet measured |
+| A dollar figure for stale-quote losses on a live Monad book today | measured over 24 h (above): 14.9% of fills stale by ≥ 10 bps, $45.53 given up, ~123 orders per fill |
 | The rule beats a colluding block producer | not claimed |
 | The quote token is real money | no: `TestUSD` is a capped testnet claim token |
 
@@ -290,7 +339,8 @@ books from contract state, so the comparison cannot look good just because trade
 2. ~~Foundry tests: one per attack row, plus fuzzing and a funds-in = funds-out invariant.~~
 3. ~~Deploy to Monad testnet and run maker and sniper against both books.~~
 4. ~~The sidebar console, reading only the chain.~~
-5. Measure stale fills on a live Monad book from its own trade history.
+5. ~~Measure stale fills on a live Monad book from its own trade history.~~
+6. Run the race over many rounds and measure how much tighter a maker can quote on RECALL.
 
 ## License
 

@@ -13,6 +13,8 @@ await p.click("text=Open Console >> nth=0"); await p.waitForTimeout(9000);
 console.log("url", p.url(), "block", await p.innerText("#blockno"), "price", await p.innerText("#topprice"), "cards", await p.locator("#bookcards .card").count());
 console.log("evidence rows", await p.locator("#evidence tbody tr").count());
 await p.screenshot({ path: "/home/arch/.hermes/cache/scratch/live-console.png" });
+await p.goto(U + "/app/index.html#overview"); await p.waitForTimeout(6000);
+console.log("livebook", (await p.innerText("#livebook")).slice(0, 140).replace(/\n/g, " | "));
 for (const v of ["trade", "race", "activity", "contracts"]) { await p.goto(U + "/app/index.html#" + v); await p.waitForTimeout(5000); console.log(v, (await p.innerText(".view.active")).slice(0, 80).replace(/\n/g, " | ")); }
 console.log("errors", errs);
 await b.close();

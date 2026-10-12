@@ -1,0 +1,65 @@
+{
+  "measuredAt": "2026-10-12T13:40:59.872Z",
+  "window": {
+    "hours": 24,
+    "fromBlock": 112552814,
+    "toBlock": 112768814,
+    "fromTime": "2026-10-11T19:30:16.000Z",
+    "toTime": "2026-10-12T13:40:46.000Z"
+  },
+  "markets": {
+    "MON-USDC": "0x065C9d28E428A0db40191a54d33d5b7c71a9C394",
+    "MON-AUSD": "0x131a2e70a5b31a517a74b8c567149bc294470da9"
+  },
+  "reference": "public 1-second MON/USDT candles from a centralized exchange, forward-filled, median basis removed",
+  "basisBps": -10.05,
+  "fills": 5188,
+  "fillsWithReference": 5188,
+  "notionalUsd": 457208,
+  "staleAtFill": {
+    ">=10bps": {
+      "fills": 774,
+      "shareOfFills": 0.1492,
+      "notionalUsd": 31570,
+      "makerGaveUpUsd": 45.53
+    },
+    ">=25bps": {
+      "fills": 9,
+      "shareOfFills": 0.0017,
+      "notionalUsd": 544,
+      "makerGaveUpUsd": 2.02
+    },
+    ">=50bps": {
+      "fills": 0,
+      "shareOfFills": 0,
+      "notionalUsd": 0,
+      "makerGaveUpUsd": 0
+    }
+  },
+  "makerMarkout": {
+    "+1s": {
+      "fills": 5188,
+      "netUsd": 114.58,
+      "lossOnLosingFillsUsd": 106.55,
+      "netBpsOfNotional": 2.51
+    },
+    "+5s": {
+      "fills": 5188,
+      "netUsd": 127.88,
+      "lossOnLosingFillsUsd": 110.3,
+      "netBpsOfNotional": 2.8
+    },
+    "+30s": {
+      "fills": 5188,
+      "netUsd": 56.6,
+      "lossOnLosingFillsUsd": 197.05,
+      "netBpsOfNotional": 1.24
+    }
+  },
+  "quoteChurnSample": {
+    "blocks": 3000,
+    "ordersCreated": 8513,
+    "cancelTransactions": 4683,
+    "fills": 69
+  }
+}

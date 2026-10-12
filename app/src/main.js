@@ -316,8 +316,25 @@ function bookCard(k) {
 }
 
 let EVIDENCE = null;
+let LIVEBOOK = null;
 async function loadEvidence() {
   try { EVIDENCE = await (await fetch("/app/evidence.json", { cache: "no-store" })).json(); } catch { EVIDENCE = []; }
+  try { LIVEBOOK = await (await fetch("/app/live-book.json", { cache: "no-store" })).json(); } catch { LIVEBOOK = null; }
+}
+function liveBookCard(m) {
+  if (!m) return "";
+  const s10 = m.staleAtFill[">=10bps"], s25 = m.staleAtFill[">=25bps"], k1 = m.makerMarkout["+1s"], k30 = m.makerMarkout["+30s"], c = m.quoteChurnSample;
+  const usd = (x) => "$" + Math.round(x).toLocaleString();
+  const stat = (n, l) => `<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`;
+  return `<div class="cardhead"><div><span class="eyebrow">Measured on Monad mainnet · ${new Date(m.window.fromTime).toLocaleString()} → ${new Date(m.window.toTime).toLocaleString()}</span>
+      <h2>What a live ordinary book on Monad pays today</h2></div></div>
+    <div class="grid g4">
+      ${stat(m.fills.toLocaleString(), `fills · ${usd(m.notionalUsd)} traded`)}
+      ${stat((s10.shareOfFills * 100).toFixed(1) + "%", "filled ≥10 bps after the outside price moved through the quote")}
+      ${stat(usd(s10.makerGaveUpUsd), `given up on those ${s10.fills} fills (${s25.fills} were ≥25 bps)`)}
+      ${stat(Math.round(c.ordersCreated / Math.max(c.fills, 1)) + "×", `orders posted per fill · ${c.cancelTransactions.toLocaleString()} cancel txs in ${c.blocks.toLocaleString()} blocks`)}
+    </div>
+    <p class="muted" style="margin-top:14px">Every fill on a live MON/USDC order book on Monad mainnet, compared with a deep outside venue's 1-second price (median basis ${m.basisBps} bps removed). Makers still finished ${k1.netBpsOfNotional >= 0 ? "ahead" : "behind"} overall (${k1.netBpsOfNotional} bps at +1 s, ${k30.netBpsOfNotional} bps at +30 s), but losing fills cost them ${usd(k30.lossOnLosingFillsUsd)} at +30 s, and they defend by re-posting about ${Math.round(c.ordersCreated / Math.max(c.fills, 1))} orders per fill. Reproduce: <code>node app/scripts/measure-live-book.mjs 24</code>.</p>`;
 }
 function verdict(r) {
   if (r.mode === "dodge") return r.deferredCancel ? "Dodge refused: the fair take filled" : r.sniperFilled ? "Take filled" : "Maker's cancel applied";
@@ -335,7 +352,7 @@ function evidenceTable(list) {
     <td class="num">${txl(r.take.hash, `#${r.take.block} · ${r.take.index}`)}</td>
     <td class="num">${txl(r.cancel.hash, `#${r.cancel.block} · ${r.cancel.index}`)}</td>
     <td>${r.sniperFoundNothing || r.deferredCancel ? `<span class="tag ok">${esc(verdict(r))}</span>` : `<span class="tag v">${esc(verdict(r))}</span>`}</td>
-    <td class="num">${r.when ? new Date(r.when).toLocaleString() : "—"}</td></tr>`).join("")}
+    <td class="num">${r.when ? new Date(r.when).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"}</td></tr>`).join("")}
   </tbody></table></div>`;
 }
 
@@ -343,6 +360,8 @@ function renderOverview() {
   $("#bookcards").innerHTML = bookCard("recall") + bookCard("plain");
   $$("[data-goto]").forEach((a) => (a.onclick = () => { S.ui.viewBook = a.dataset.goto; }));
   $("#evidence").innerHTML = evidenceTable(EVIDENCE);
+  const lb = $("#livebook");
+  if (lb) { lb.innerHTML = liveBookCard(LIVEBOOK); lb.style.display = LIVEBOOK ? "" : "none"; }
 }
 
 // ------------------------------------------------------------------ render: trade

@@ -1,0 +1,17 @@
+name: contracts
+on:
+  push:
+  pull_request:
+jobs:
+  forge:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: contracts
+    steps:
+      - uses: actions/checkout@v4
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: v1.7.1
+      - run: forge build --sizes
+      - run: forge test -vv

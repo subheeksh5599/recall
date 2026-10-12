@@ -1,0 +1,238 @@
+{
+  "table": [
+    {
+      "action": "ordinary · post",
+      "n": 4,
+      "medianUsed": 368197,
+      "medianLimit": 368197
+    },
+    {
+      "action": "ordinary · take",
+      "n": 2,
+      "medianUsed": 346841,
+      "medianLimit": 346841
+    },
+    {
+      "action": "ordinary · cancel (snipe)",
+      "n": 2,
+      "medianUsed": 312802,
+      "medianLimit": 312802
+    },
+    {
+      "action": "RECALL · post",
+      "n": 6,
+      "medianUsed": 324742,
+      "medianLimit": 324742
+    },
+    {
+      "action": "RECALL · take",
+      "n": 3,
+      "medianUsed": 258229,
+      "medianLimit": 258229
+    },
+    {
+      "action": "RECALL · cancel (dodge)",
+      "n": 1,
+      "medianUsed": 287289,
+      "medianLimit": 287289
+    },
+    {
+      "action": "RECALL · settle",
+      "n": 3,
+      "medianUsed": 150512,
+      "medianLimit": 150512
+    },
+    {
+      "action": "RECALL · cancel (snipe)",
+      "n": 2,
+      "medianUsed": 313321,
+      "medianLimit": 313321
+    }
+  ],
+  "rows": [
+    {
+      "run": "ordinary snipe",
+      "action": "post",
+      "fn": "post",
+      "gasUsed": 368197,
+      "gasLimit": 368197,
+      "tx": "0x289b7611324264111c6b2587e4d42e4908896f4bb75ffbb316477c9484c896c1"
+    },
+    {
+      "run": "ordinary snipe",
+      "action": "post",
+      "fn": "post",
+      "gasUsed": 368828,
+      "gasLimit": 368828,
+      "tx": "0x106e574204a6a9da4bc6a2a6e3bbaec76440ccdd4fd0d27fecc27294f7c8b133"
+    },
+    {
+      "run": "ordinary snipe",
+      "action": "take",
+      "fn": "take",
+      "gasUsed": 346841,
+      "gasLimit": 346841,
+      "tx": "0xb52dfa8ff8d62889d94128c8c9ec4d57b7e3608e6773576f2ca39eef484193fb"
+    },
+    {
+      "run": "ordinary snipe",
+      "action": "cancel",
+      "fn": "cancel",
+      "gasUsed": 312802,
+      "gasLimit": 312802,
+      "tx": "0xd1f00ff2664b3c5258c6df4bbe13d5b05aa8c8520b05ae9576da8c0b2f3bef74"
+    },
+    {
+      "run": "ordinary snipe",
+      "action": "post",
+      "fn": "post",
+      "gasUsed": 323646,
+      "gasLimit": 323646,
+      "tx": "0x315ceafb082bd59af0ae4c3782f01d9f21c9074693088c9b1ce0bdc5e3a70aee"
+    },
+    {
+      "run": "ordinary snipe",
+      "action": "post",
+      "fn": "post",
+      "gasUsed": 324277,
+      "gasLimit": 324277,
+      "tx": "0x2c59860a594ae49d36de22eb526c7a3bbecd4321cbea6b52d1d3edd2c17d51c7"
+    },
+    {
+      "run": "ordinary snipe",
+      "action": "take",
+      "fn": "take",
+      "gasUsed": 280014,
+      "gasLimit": 280014,
+      "tx": "0x22fe94e427fc4332ac4d42bea6890a5bbe2f5add3d6bfb60fe496b4949e2633b"
+    },
+    {
+      "run": "ordinary snipe",
+      "action": "cancel",
+      "fn": "cancel",
+      "gasUsed": 286980,
+      "gasLimit": 286980,
+      "tx": "0x474bb85d47bfc42e2df9ae130f2fd3c7262ce98cf503b70e8b7b393db467eb90"
+    },
+    {
+      "run": "RECALL dodge",
+      "action": "post",
+      "fn": "post",
+      "gasUsed": 324112,
+      "gasLimit": 324112,
+      "tx": "0x540ca1391d9ed951997aeaec0cd0f868facafdc6b860c86b05e2168108bdc58d"
+    },
+    {
+      "run": "RECALL dodge",
+      "action": "post",
+      "fn": "post",
+      "gasUsed": 324742,
+      "gasLimit": 324742,
+      "tx": "0x26936cc81f8d11829d7f89deeb52aaaf2e973e9383e659f1dad3fac0aae895a0"
+    },
+    {
+      "run": "RECALL dodge",
+      "action": "take",
+      "fn": "take",
+      "gasUsed": 258229,
+      "gasLimit": 258229,
+      "tx": "0x993a31587ea733ab2d80567868f452588118430ac31e83b03866857be3578b6c"
+    },
+    {
+      "run": "RECALL dodge",
+      "action": "cancel",
+      "fn": "cancel",
+      "gasUsed": 287289,
+      "gasLimit": 287289,
+      "tx": "0xb9426a7c806e481379ea40c0b5f1c08594a46c493a3f713b3ccbc0b9dbb919fb"
+    },
+    {
+      "run": "RECALL dodge",
+      "action": "settle",
+      "fn": "settle",
+      "gasUsed": 188425,
+      "gasLimit": 188425,
+      "tx": "0x524140a3c02f381be7d27cce5e6508f0cdc100d177b6ba36466618a32854872a"
+    },
+    {
+      "run": "RECALL snipe",
+      "action": "post",
+      "fn": "post",
+      "gasUsed": 368663,
+      "gasLimit": 368663,
+      "tx": "0x9b57f147e79315199d9c50f46228311c011f457e08d4cb90e2f552c4f503c0b3"
+    },
+    {
+      "run": "RECALL snipe",
+      "action": "post",
+      "fn": "post",
+      "gasUsed": 324742,
+      "gasLimit": 324742,
+      "tx": "0x0743090d56f9f8dd77ef99dedd5eb8fc12249f8dd38e4accb48cd5ff17c95e1b"
+    },
+    {
+      "run": "RECALL snipe",
+      "action": "take",
+      "fn": "take",
+      "gasUsed": 265592,
+      "gasLimit": 265592,
+      "tx": "0x85fbe8d487ae3a9847e28fc73b16b6c6b2b2a98fad5036bf673d9b30e05bac6b"
+    },
+    {
+      "run": "RECALL snipe",
+      "action": "cancel",
+      "fn": "cancel",
+      "gasUsed": 313321,
+      "gasLimit": 313321,
+      "tx": "0xb682541fa9855cf79cd6c3487d81ab16800526207c73a86ab19a95a5478f9984"
+    },
+    {
+      "run": "RECALL snipe",
+      "action": "settle",
+      "fn": "settle",
+      "gasUsed": 150512,
+      "gasLimit": 150512,
+      "tx": "0xf19df49867cd6158c7191152607f5a6b4c0d2cd51ad760f35429135d89c84b29"
+    },
+    {
+      "run": "RECALL snipe",
+      "action": "post",
+      "fn": "post",
+      "gasUsed": 324500,
+      "gasLimit": 324500,
+      "tx": "0xae77bdfab7e36e5867f387fac669b36084b7c070a93fd5885eaa0b721d8d435e"
+    },
+    {
+      "run": "RECALL snipe",
+      "action": "post",
+      "fn": "post",
+      "gasUsed": 325130,
+      "gasLimit": 325130,
+      "tx": "0x0733953f71d4a7705b802d267dc9c5c4e8cc717bbd99cd04e62a66d1a6acbf75"
+    },
+    {
+      "run": "RECALL snipe",
+      "action": "take",
+      "fn": "take",
+      "gasUsed": 244077,
+      "gasLimit": 244077,
+      "tx": "0xf90b79285e4ec975a63d56734ab8fe21609d99a3469235983b98f36f5e548e64"
+    },
+    {
+      "run": "RECALL snipe",
+      "action": "cancel",
+      "fn": "cancel",
+      "gasUsed": 287289,
+      "gasLimit": 287289,
+      "tx": "0x12dee6bb73f6ae6939f679e47aaf0591a7691e7099bf1684959d3e90515927be"
+    },
+    {
+      "run": "RECALL snipe",
+      "action": "settle",
+      "fn": "settle",
+      "gasUsed": 128321,
+      "gasLimit": 128321,
+      "tx": "0xf68e1ba52a8992782991fd4531445e2f29db6710b30d7221d7c6c17783163bf7"
+    }
+  ]
+}
