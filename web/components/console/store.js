@@ -245,6 +245,17 @@ export function initBurners() {
   S.races = JSON.parse(localStorage.getItem("recall.races") || "[]");
   S.events = JSON.parse(localStorage.getItem("recall.events") || "[]");
 }
+/** Load race wallets from a backup file made with "Back up keys". */
+export async function restoreBurners(text) {
+  const j = JSON.parse(text);
+  const ok = (k) => typeof k === "string" && /^0x[0-9a-fA-F]{64}$/.test(k);
+  if (!ok(j.maker) || !ok(j.sniper)) throw new Error("Not a race-wallet backup: expected maker and sniper keys.");
+  localStorage.setItem("recall.burners", JSON.stringify({ maker: j.maker, sniper: j.sniper }));
+  initBurners();
+  S.burnBal = {};
+  bump();
+  await loadBurners();
+}
 export async function loadBurners() {
   if (!S.burn) return;
   const next = {};

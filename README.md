@@ -137,6 +137,13 @@ The same three scenarios were then run again from the console's Race Lab in a he
 | Rule off | snipe, 5.01 bps | #70367895 · 1 | #70367895 · 5 | `TakeQueued`, `Filled`, `CancelTooLate` |
 | RECALL | dodge, 0 bps | #70368409 · 1 | #70368409 · 3 | `TakeQueued`, `CancelDeferred`, `Filled` at #70368423 |
 
+Run again after the move to Next.js, from the hosted console:
+
+| Book | Scenario | Take (block · index) | Cancel (block · index) | What the chain recorded |
+|---|---|---|---|---|
+| RECALL | dodge, 0.03 bps | #70734414 · 1 | #70734414 · 3 | `TakeQueued`, `CancelDeferred`, then the fair take filled at settlement |
+| RECALL | snipe, 11.11 bps | #70734708 · 1 | #70734708 · 4 | `TakeQueued`, `Cancelled` (stale), `FoundNothing` at settlement |
+
 `node app/scripts/verify-evidence.mjs` re-reads every recorded run from chain receipts and prints
 the events above.
 

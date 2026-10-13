@@ -3,7 +3,7 @@ import { useState } from "react";
 import { parseEther } from "viem";
 import { ADDR, erc20Abi, fmtPrice } from "@/lib/chain.js";
 import { prepare, race, send, wait } from "@/lib/race.js";
-import { S, BOOKS, errMsg, loadBalances, loadBooks, loadBurners, need, pc, saveRace, toast, useStore, act } from "./store";
+import { S, BOOKS, errMsg, loadBalances, loadBooks, loadBurners, need, pc, restoreBurners, saveRace, toast, useStore, act } from "./store";
 import { Addr, Btn, Seg, Tx, mon } from "./ui";
 import { EvidenceTable, verdict } from "./Overview";
 import { monadTestnet } from "@/lib/chain.js";
@@ -81,8 +81,17 @@ function Burners() {
         <Btn className="btn ghost sm" id="prepb" busyLabel="Preparing" run={doPrepare}>Prepare</Btn>
         <Btn className="btn ghost sm" id="sweepb" busyLabel="Sweeping" run={sweep}>Sweep back</Btn>
         <button className="btn ghost sm" id="backupb" onClick={backup}>Back up keys</button>
+        <label className="btn ghost sm" id="restoreb" style={{ cursor: "pointer" }}>
+          Restore keys
+          <input type="file" accept="application/json,.json" style={{ display: "none" }} onChange={async (e) => {
+            const f = e.target.files?.[0];
+            e.target.value = "";
+            if (!f) return;
+            try { await restoreBurners(await f.text()); toast("Race wallets restored.", true); } catch (err) { toast(errMsg(err)); }
+          }} />
+        </label>
       </div>
-      <p className="note">Funding sends MON from your connected wallet. Prepare wraps a little MON, claims tUSD and approves the books for each race wallet. Sweep returns what's left to you. The keys live only in this browser's storage: back them up or sweep before clearing it.</p>
+      <p className="note">Funding sends MON from your connected wallet. Prepare wraps a little MON, claims tUSD and approves the books for each race wallet. Sweep returns what's left to you. The keys live only in this browser's storage: back them up or sweep before clearing it, and restore a backup to race from another browser.</p>
     </div>
   );
 }
@@ -135,11 +144,11 @@ export default function RaceLab() {
     try {
       const r = await race(pc, {
         maker: S.bw.maker, sniper: S.bw.sniper, book: BOOKS[book], mode,
-        size: parseEther(size || "0.2"), signers: S.signers,
+        size: parseEther(size || "0.2"), signers: S.signers, timeoutMs: 600_000,
         onStep: (s) => {
           if (s.k === "watch" || s.k === "stale") setMove(s.move);
           if (s.k === "result") return;
-          const small = s.k === "posted" ? s.hashes.map((h) => <Tx key={h} hash={h} />) : s.k === "fired" ? <><Tx hash={s.take}>take</Tx> · <Tx hash={s.cancel}>cancel</Tx></> : null;
+          const small = s.k === "posted" ? s.hashes.map((h, i) => <span key={h}>{i ? " · " : ""}<Tx hash={h} /></span>) : s.k === "fired" ? <><Tx hash={s.take}>take</Tx> · <Tx hash={s.cancel}>cancel</Tx></> : null;
           add((STEP_TEXT[s.k] || (() => s.k))(s), small, s.k !== "watch");
         },
       });
@@ -171,7 +180,7 @@ export default function RaceLab() {
           <div className="field"><label>Size (MON)</label><input className="input mono" id="racesize" value={size} onChange={(e) => setSize(e.target.value)} /></div>
           <button className="btn fire" id="racebtn" disabled={racing} onClick={run}>{racing ? <><span className="spin" />Racing</> : "Run the race"}</button>
           <p className="note">{mode === "snipe"
-            ? "Snipe waits for a real signed-price move of at least the book's threshold. Nothing is simulated."
+            ? "Snipe waits (up to 10 minutes) for a real signed-price move of at least the book's threshold. Nothing is simulated."
             : "Dodge: the sniper wallet takes as a fair buyer while the price is flat, and the maker tries to cancel against it."}</p>
         </div>
         <div className="card dark stack">

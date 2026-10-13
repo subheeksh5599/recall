@@ -2,6 +2,64 @@
  {
   "book": "0x4Fa264Efc5DDa93c51f98cB9d5A25E81b4801916",
   "cancelFirst": true,
+  "mode": "snipe",
+  "staleBps": 5,
+  "move": 11.11,
+  "target": "19",
+  "sniperFilled": false,
+  "sniperFoundNothing": true,
+  "staleCancel": true,
+  "deferredCancel": false,
+  "take": {
+   "hash": "0xb0aeefb2ab5e1dcfd51dfeaf30ec9c1c210cc4962a8a0ac4a40c86d14f7edded",
+   "block": "70734708",
+   "index": 1
+  },
+  "cancel": {
+   "hash": "0x5e41bf9d9ecaa0c3bbe0dca32992a344aae761464d3c2cf251d6b7a155f26389",
+   "block": "70734708",
+   "index": 4
+  },
+  "settle": "0xe80b02d24cb63a721c0d105d9144fcd84cea024a29773ca29ff810f834fe9af8",
+  "posts": [
+   "0x56e3292b9a2c247bf50407c1820c28b745129beb9a07baa0d17d4c854c5b62ca",
+   "0xb9af74fec44b06115fda04387ac24fd0af2c5a7242fcd4649c30a88898e4a49a"
+  ],
+  "seconds": 29,
+  "when": 1791910644989
+ },
+ {
+  "book": "0x4Fa264Efc5DDa93c51f98cB9d5A25E81b4801916",
+  "cancelFirst": true,
+  "mode": "dodge",
+  "staleBps": 5,
+  "move": 0.03,
+  "target": "16",
+  "sniperFilled": true,
+  "sniperFoundNothing": false,
+  "staleCancel": false,
+  "deferredCancel": true,
+  "take": {
+   "hash": "0x6bde97a1a37c29a6daba0747ad166f68fbcc6ee4c81ee3be07c8c6ba30612bfc",
+   "block": "70734414",
+   "index": 1
+  },
+  "cancel": {
+   "hash": "0xc2f4cf19824d0c7d842e3e35f0f9fde46e7c218fe63ff0a4d4c9224838618694",
+   "block": "70734414",
+   "index": 3
+  },
+  "settle": "0x57333146f638f7df490d5f6200d92d7a387194f880cc8fbcb636f2a51282943b",
+  "posts": [
+   "0x38fa9473ef8c9b5c3284b6e503f4f3853a099ce5b6f36663760566933b12eabf",
+   "0x99cfc83dbfdf4c3d75df1cb47bb9a3956d85fae54e7684bb194035880039b856"
+  ],
+  "seconds": 20,
+  "when": 1791910554465
+ },
+ {
+  "book": "0x4Fa264Efc5DDa93c51f98cB9d5A25E81b4801916",
+  "cancelFirst": true,
   "mode": "dodge",
   "staleBps": 5,
   "move": 0,
