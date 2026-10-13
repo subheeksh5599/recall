@@ -350,6 +350,10 @@ books from contract state, so the comparison cannot look good just because trade
   real move goes unprotected.
 - **Signed prices are trusted for what they say.** A wrong signed price makes a wrong staleness
   call. Three of the five fixed signers must agree on one timestamp.
+- **The cancel has to arrive inside the delay window.** The book waits 2 blocks (under a second). In one
+  console run on a slow machine the maker's cancel landed 2 blocks after the sniper's take, the window had
+  closed, and the take filled (block #70740457 → #70740459). The race now signs both transactions before
+  sending; a maker on a slow connection still needs a longer delay, which is a deploy-time setting.
 - **A maker with no taker waiting cancels freely.** The gate only matters while a take is queued,
   which is the only moment a cancel can hurt anyone.
 - **Race wallets live in browser storage.** The console says so and offers a key backup and a sweep.
