@@ -4,8 +4,8 @@ import { createPublicClient, createWalletClient, http, parseEther, formatEther }
 import { privateKeyToAccount, generatePrivateKey, nonceManager } from "viem/accounts";
 import { readFileSync, writeFileSync, existsSync, mkdirSync, chmodSync } from "node:fs";
 import { homedir } from "node:os";
-import { monadTestnet, ADDR, oracleAbi } from "../src/chain.js";
-import { prepare, race, wait } from "../src/race.js";
+import { monadTestnet, ADDR, oracleAbi } from "../../web/lib/chain.js";
+import { prepare, race, wait } from "../../web/lib/race.js";
 
 const which = process.argv[2] || "recall";
 const mode = process.argv[3] || "snipe";

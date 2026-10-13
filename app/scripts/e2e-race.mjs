@@ -7,14 +7,14 @@ import { homedir } from "node:os";
 import { createRequire } from "node:module";
 import { createWalletClient, http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { monadTestnet } from "../src/chain.js";
+import { monadTestnet } from "../../web/lib/chain.js";
 
 const require = createRequire(import.meta.url);
 const dir = process.env.PLAYWRIGHT_DIR;
 if (!dir) throw new Error("set PLAYWRIGHT_DIR to a node_modules folder that holds playwright");
 const { chromium } = require(`${dir}/playwright`);
 const [book = "recall", mode = "snipe"] = process.argv.slice(2);
-const URL = process.env.APP_URL || "http://127.0.0.1:4319/app/";
+const URL = process.env.APP_URL || "http://127.0.0.1:4320/app";
 const cfg = `${homedir()}/.config/recall`;
 const testerPk = readFileSync(`${cfg}/tester.env`, "utf8").match(/^TESTER_PK=(.*)$/m)[1];
 const burners = readFileSync(`${cfg}/burners.json`, "utf8").trim();

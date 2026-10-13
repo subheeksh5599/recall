@@ -2,7 +2,7 @@
 import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 const { chromium } = require(`${process.env.PLAYWRIGHT_DIR}/playwright`);
-const URL = process.env.APP_URL || "http://127.0.0.1:4319/app/";
+const URL = process.env.APP_URL || "http://127.0.0.1:4320/app";
 const b = await chromium.launch();
 for (const [w, h, tag] of [[1440, 900, "d"], [390, 844, "m"]]) {
   const p = await b.newPage({ viewport: { width: w, height: h } });

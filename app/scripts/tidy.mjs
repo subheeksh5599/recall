@@ -3,8 +3,8 @@ import { createPublicClient, createWalletClient, http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { monadTestnet, ADDR, bookAbi } from "../src/chain.js";
-import { send, wait } from "../src/race.js";
+import { monadTestnet, ADDR, bookAbi } from "../../web/lib/chain.js";
+import { send, wait } from "../../web/lib/race.js";
 const who = process.argv[2] || "deployer";
 const c = `${homedir()}/.config/recall`;
 const pk = who === "maker" || who === "sniper" ? JSON.parse(readFileSync(`${c}/burners.json`, "utf8"))[who]

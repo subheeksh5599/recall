@@ -3,16 +3,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "esbuild src/main.js --bundle --minify --format=esm --target=es2020 --outfile=../site/app/app.js",
-    "smoke": "node scripts/smoke.mjs"
+    "smoke": "node scripts/smoke.mjs",
+    "race": "node scripts/race.mjs",
+    "verify": "node scripts/verify-evidence.mjs",
+    "measure": "node scripts/measure-live-book.mjs 24"
   },
   "dependencies": {
     "viem": "^2.21.0"
-  },
-  "devDependencies": {
-    "esbuild": "^0.24.0"
-  },
-  "allowScripts": {
-    "esbuild@0.24.2": true
   }
 }

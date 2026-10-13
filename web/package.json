@@ -1,0 +1,16 @@
+{
+  "name": "recall-web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev -p 4320",
+    "build": "next build",
+    "start": "npx serve out -l 4320"
+  },
+  "dependencies": {
+    "next": "^16.4.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "viem": "^2.21.0"
+  }
+}

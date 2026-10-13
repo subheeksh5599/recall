@@ -2,7 +2,7 @@
 // LIMIT, and its receipts report that charged amount as gasUsed.
 import { createPublicClient, http, decodeFunctionData } from "viem";
 import { readFileSync, readdirSync, writeFileSync } from "node:fs";
-import { monadTestnet, bookAbi } from "../src/chain.js";
+import { monadTestnet, bookAbi } from "../../web/lib/chain.js";
 const pc = createPublicClient({ chain: monadTestnet, transport: http() });
 const rows = [];
 for (const f of readdirSync("evidence").filter((x) => x.startsWith("race-") && x.endsWith(".json"))) {

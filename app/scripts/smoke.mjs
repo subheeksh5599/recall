@@ -1,6 +1,6 @@
 // Live check: fresh gateway packages verify on the deployed price contract.
 import { createPublicClient, http } from "viem";
-import { monadTestnet, ADDR, oracleAbi, bookAbi, fetchSignedPrice, fmtPrice } from "../src/chain.js";
+import { monadTestnet, ADDR, oracleAbi, bookAbi, fetchSignedPrice, fmtPrice } from "../../web/lib/chain.js";
 
 const pc = createPublicClient({ chain: monadTestnet, transport: http() });
 const signers = await pc.readContract({ address: ADDR.oracle, abi: oracleAbi, functionName: "signers" });

@@ -1,9 +1,9 @@
 // Re-read every recorded race from chain receipts and print the book events each transaction emitted.
 import { createPublicClient, http, decodeEventLog } from "viem";
-import { monadTestnet, bookAbi } from "../src/chain.js";
+import { monadTestnet, bookAbi } from "../../web/lib/chain.js";
 import { readFileSync, readdirSync } from "node:fs";
 const pc = createPublicClient({ chain: monadTestnet, transport: http() });
-for (const f of readdirSync("evidence").filter((x) => x.endsWith(".json"))) {
+for (const f of readdirSync("evidence").filter((x) => x.startsWith("race-") && x.endsWith(".json"))) {
   const r = JSON.parse(readFileSync("evidence/" + f));
   const evs = [];
   for (const h of [r.take.hash, r.cancel.hash, r.settle].filter(Boolean)) {

@@ -4,16 +4,16 @@
 
 ### An order book on Monad where pulling a stale quote beats the sniper, and only a stale quote.
 
-![status](https://img.shields.io/badge/status-live%20on%20testnet-e42b0c) ![tests](https://img.shields.io/badge/forge%20tests-30%20passing-0f7a3d) ![verified](https://img.shields.io/badge/source-verified%20exact%20match-0f7a3d) ![network](https://img.shields.io/badge/network-Monad%20testnet-836EF9) ![stack](https://img.shields.io/badge/stack-Solidity%20%C2%B7%20Foundry%20%C2%B7%20viem-14151a) ![license](https://img.shields.io/badge/license-MIT-yellow)
+![status](https://img.shields.io/badge/status-live%20on%20testnet-e42b0c) ![ci](https://github.com/subheeksh5599/recall/actions/workflows/test.yml/badge.svg) ![tests](https://img.shields.io/badge/forge%20tests-30%20passing-0f7a3d) ![verified](https://img.shields.io/badge/source-verified%20exact%20match-0f7a3d) ![network](https://img.shields.io/badge/network-Monad%20testnet-836EF9) ![stack](https://img.shields.io/badge/stack-Solidity%20%C2%B7%20Foundry%20%C2%B7%20Next.js%20%C2%B7%20viem-14151a) ![license](https://img.shields.io/badge/license-MIT-yellow)
 
-**[Live site](https://different-skunk-560.convex.site) · [Console](https://different-skunk-560.convex.site/app/index.html)** ·
+**[Live site](https://different-skunk-560.convex.site) · [Console](https://different-skunk-560.convex.site/app)** ·
 
 [Run it](#run-it) · [Measured on mainnet](#measured-on-a-live-monad-book) · [Live races](#live-races-on-monad-testnet) · [The rule](#the-rule) · [Why Monad](#why-monad) · [Evidence](docs/EVIDENCE.md) · [Attack → test](#attack--test) · [Honesty table](#whats-real-vs-pending--the-honesty-table)
 
 </div>
 
 **Status: deployed on Monad testnet.** Both books, the signed-price verifier and the quote token
-are live. The console in `site/app` trades against them from any browser wallet, and the race
+are live. The console (`web/`, Next.js) trades against them from any browser wallet, and the race
 below was run on both books with real transactions. The rows that are still open say so.
 
 A market maker posts prices. The market moves. The maker sends a cancel; a sniper sends a trade
@@ -147,13 +147,26 @@ the take only queued, so the cancel, landing second, still won. Full receipts ar
 
 ## Run it
 
-**Hosted.** https://different-skunk-560.convex.site (landing) and `/app/index.html` (console), served by Convex static hosting from `hosting/` (`cd hosting && npx convex deploy -y && npx @convex-dev/static-hosting deploy --skip-convex`).
-
-**Console locally.** `site/` is a static site; serve it and open `/app/`:
+**Hosted.** https://different-skunk-560.convex.site (landing) and `/app` (console). The whole front end is
+one Next.js app in `web/` (React components only, no hand-written HTML), statically exported and served by
+Convex static hosting from `hosting/`:
 
 ```bash
-cd site && python3 -m http.server 4319   # then open http://127.0.0.1:4319/app/
+cd hosting && npm i && npm run deploy   # builds web/, deploys the HTTP routes, uploads out/
 ```
+
+**Console locally.**
+
+```bash
+cd web && npm i && npm run dev            # http://localhost:4320/app
+```
+
+| Path | What it is |
+|---|---|
+| `web/app/(site)/page.jsx` | landing page, built from `web/components/landing/*` |
+| `web/app/(console)/app/page.jsx` | the sidebar console |
+| `web/components/console/store.js` | chain reads, wallet, race wallets: one store, polled |
+| `web/lib/chain.js`, `web/lib/race.js` | addresses, ABIs, signed-price fetch and verify, the race; shared with `app/scripts` |
 
 | Page | What you can do |
 |---|---|
@@ -174,8 +187,9 @@ WMON=0xFb8b... STALE_BPS=5 ./script/with-account.sh bash -c \
    --private-key "$PRIVATE_KEY" --sender "$DEPLOYER" --broadcast --slow'
 ```
 
-**Browser end-to-end.** `PLAYWRIGHT_DIR=<node_modules with playwright> node app/scripts/e2e-race.mjs recall snipe`
-drives the console itself and saves a screenshot next to the receipts.
+**Browser end-to-end.** With `PLAYWRIGHT_DIR=<node_modules with playwright>` and `APP_URL=<console url>`:
+`node app/scripts/e2e-trade.mjs` connects a wallet, posts a quote with the live signed price and cancels it;
+`node app/scripts/e2e-race.mjs recall snipe` runs the Race Lab and saves a screenshot next to the receipts.
 
 **Race from the terminal.** `cd app && npm i && node scripts/race.mjs recall snipe` (or `plain`,
 `dodge`). Keys are read from `~/.config/recall/`, never from the repo.
