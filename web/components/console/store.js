@@ -3,17 +3,21 @@
 // Loaders mutate `S` and call `bump()`; components subscribe with `useStore()`.
 import { useSyncExternalStore } from "react";
 import {
-  createPublicClient, createWalletClient, custom, http, parseEther, BaseError,
+  createPublicClient, createWalletClient, custom, fallback, http, parseEther, BaseError,
   ContractFunctionRevertedError, decodeEventLog,
 } from "viem";
 import { privateKeyToAccount, generatePrivateKey, nonceManager } from "viem/accounts";
-import { monadTestnet, ADDR, bookAbi, oracleAbi, erc20Abi, fetchSignedPrice } from "@/lib/chain.js";
+import { monadTestnet, ADDR, PRIMARY_RPC, PUBLIC_RPC, bookAbi, oracleAbi, erc20Abi, fetchSignedPrice } from "@/lib/chain.js";
 import { send, wait } from "@/lib/race.js";
 
 export const EXP = monadTestnet.blockExplorers.default.url;
 export const BOOKS = { recall: ADDR.recall, plain: ADDR.plain };
 export const NAME = { recall: "RECALL", plain: "Ordinary" };
-export const pc = createPublicClient({ chain: monadTestnet, transport: http(undefined, { batch: true, retryCount: 2 }) });
+const rpc = () => fallback([http(PRIMARY_RPC, { batch: true, retryCount: 1 }), http(PUBLIC_RPC, { batch: true, retryCount: 2 })]);
+export const RPC_NAME = PRIMARY_RPC === PUBLIC_RPC ? "public RPC" : new URL(PRIMARY_RPC).hostname.split(".").slice(-2, -1)[0];
+export const pc = createPublicClient({ chain: monadTestnet, transport: rpc() });
+// The provider's free tier limits log ranges to 10 blocks; the public endpoint serves 100.
+const logs_ = createPublicClient({ chain: monadTestnet, transport: http(PUBLIC_RPC, { retryCount: 2 }) });
 
 export const S = {
   block: 0n,
@@ -170,7 +174,7 @@ export async function tailEvents() {
   let events = S.events;
   while (S.scanFrom <= latest) {
     const to = S.scanFrom + 99n > latest ? latest : S.scanFrom + 99n;
-    const logs = await pc.getLogs({ address: [ADDR.recall, ADDR.plain], fromBlock: S.scanFrom, toBlock: to });
+    const logs = await logs_.getLogs({ address: [ADDR.recall, ADDR.plain], fromBlock: S.scanFrom, toBlock: to });
     for (const l of logs) {
       try {
         const ev = decodeEventLog({ abi: bookAbi, data: l.data, topics: l.topics });
@@ -245,7 +249,7 @@ export function initBurners() {
     localStorage.setItem("recall.burners", JSON.stringify(j));
   }
   S.burn = { maker: privateKeyToAccount(j.maker, { nonceManager }), sniper: privateKeyToAccount(j.sniper, { nonceManager }) };
-  const bwc = (account) => createWalletClient({ account, chain: monadTestnet, transport: http() });
+  const bwc = (account) => createWalletClient({ account, chain: monadTestnet, transport: rpc() });
   S.bw = { maker: bwc(S.burn.maker), sniper: bwc(S.burn.sniper) };
   S.races = JSON.parse(localStorage.getItem("recall.races") || "[]");
   S.events = JSON.parse(localStorage.getItem("recall.events") || "[]");

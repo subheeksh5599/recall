@@ -1,11 +1,17 @@
 // Shared chain config + signed-price helpers for the dashboard and node scripts.
 import { defineChain, encodePacked, keccak256, recoverAddress } from "viem";
 
+// RPC: a provider URL from the environment (NEXT_PUBLIC_MONAD_RPC for the site, MONAD_RPC for scripts),
+// with the public endpoint as the fallback. Log scans always use the public endpoint (PUBLIC_RPC), which
+// serves 100-block ranges.
+export const PUBLIC_RPC = "https://testnet-rpc.monad.xyz";
+export const PRIMARY_RPC = process.env.NEXT_PUBLIC_MONAD_RPC || process.env.MONAD_RPC || PUBLIC_RPC;
+
 export const monadTestnet = defineChain({
   id: 10143,
   name: "Monad Testnet",
   nativeCurrency: { name: "MON", symbol: "MON", decimals: 18 },
-  rpcUrls: { default: { http: ["https://testnet-rpc.monad.xyz"] } },
+  rpcUrls: { default: { http: [PRIMARY_RPC, PUBLIC_RPC] } },
   blockExplorers: { default: { name: "Monad Explorer", url: "https://testnet.monadexplorer.com" } },
   contracts: { multicall3: { address: "0xcA11bde05977b3631167028862bE2a173976CA11" } },
   testnet: true,

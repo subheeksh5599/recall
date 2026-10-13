@@ -181,6 +181,10 @@ Convex static hosting from `hosting/`:
 cd hosting && npm i && npm run deploy   # builds web/, deploys the HTTP routes, uploads out/
 ```
 
+**RPC.** The console reads and sends through an RPC provider (Alchemy, Monad testnet) set by
+`NEXT_PUBLIC_MONAD_RPC` in `web/.env.local`, with the public Monad endpoint as automatic fallback. Log scans
+use the public endpoint, which serves 100-block ranges. Scripts take `MONAD_RPC` the same way.
+
 **Console locally.**
 
 ```bash

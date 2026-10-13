@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { S, boot, connect, useStore } from "./store";
+import { S, RPC_NAME, boot, connect, useStore } from "./store";
 import { Toasts, short } from "./ui";
 import { fmtPrice } from "@/lib/chain.js";
 import Overview from "./Overview";
@@ -79,6 +79,7 @@ export default function Console() {
             <div className="netcard">
               <div className="row"><span><i className={"dot " + (S.block ? "live" : "bad")} />Monad testnet</span><span className="mono" id="blockno">{S.block ? "#" + Number(S.block).toLocaleString("en-US") : "—"}</span></div>
               <div className="row"><span>Signed price</span><span className="mono">{price}</span></div>
+              <div className="row"><span>RPC</span><span className="mono">{RPC_NAME}</span></div>
               <div className="row"><span>Price age</span><span className="mono">{age === null ? "—" : age + "s"}</span></div>
             </div>
             <button className="btn fire" id="connect" onClick={connect}>{S.wallet ? short(S.wallet.address) : "Connect wallet"}</button>
