@@ -152,6 +152,25 @@ same block, exactly as fee ordering intends. On the ordinary book that was the e
 the take only queued, so the cancel, landing second, still won. Full receipts are in
 `app/evidence/*.json` and the console's Overview page lists every recorded run with explorer links.
 
+## Beyond the demo video
+
+The video shows setup and one live race starting. The console does more, and each of these was run against
+the deployed contracts from the hosted console, with receipts:
+
+| Not in the video | Where | Recorded result |
+|---|---|---|
+| Race result on the RECALL book | Race Lab → RECALL → Snipe | take #70742447 · index 1 queued, cancel same block · index 3 removed the quote, take found nothing (`app/evidence/race-recall-snipe-1791913005244.json`) |
+| The same race on the ordinary book | Race Lab → Ordinary → Snipe | take #70742879 · index 1 filled the stale quote, cancel arrived to a filled order (`race-plain-snipe-1791913132228.json`) |
+| A maker trying to dodge a fair trade | Race Lab → Maker dodges a fair take | cancel deferred, the fair take filled at settlement (`race-recall-dodge-1791910554465.json`) |
+| Trading from your own wallet | Trade | post a quote with the live signed price (the token approval is requested automatically), buy or sell into a quote, cancel, settle the queue |
+| Wrap / unwrap MON, claim test dollars | Trade → Account | one click each |
+| Live event feed and every queued take | Activity | read from chain logs and contract state |
+| Addresses, parameters, signer set | Contracts | read from the chain; source verified |
+| Moving race wallets between browsers | Race Lab → Back up keys / Restore keys | |
+| Returning race funds | Race Lab → Sweep back | |
+
+`node app/scripts/verify-evidence.mjs` re-reads every recorded race from chain receipts.
+
 ## Run it
 
 **Hosted.** https://different-skunk-560.convex.site (landing) and `/app` (console). The whole front end is
@@ -206,6 +225,7 @@ WMON=0xFb8b... STALE_BPS=5 ./script/with-account.sh bash -c \
 - [Measured on a live Monad book](#measured-on-a-live-monad-book)
 - [Deployments](#deployments)
 - [Live races on Monad testnet](#live-races-on-monad-testnet)
+- [Beyond the demo video](#beyond-the-demo-video)
 - [Run it](#run-it)
 - [The rule](#the-rule)
 - [The problem I set out to solve](#the-problem-i-set-out-to-solve)
