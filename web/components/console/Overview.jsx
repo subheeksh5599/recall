@@ -8,6 +8,7 @@ export function verdict(r) {
   if (r.mode === "dodge") return r.deferredCancel ? "Dodge refused: the fair take filled" : r.sniperFilled ? "Take filled" : "Maker's cancel applied";
   if (r.sniperFoundNothing) return "Sniper found nothing: the stale cancel landed first";
   if (r.sniperFilled) return "Sniper filled the stale quote";
+  if (r.staleCancel) return "Cancel landed before the take";
   return "No fill";
 }
 
@@ -25,7 +26,7 @@ export function EvidenceTable({ list }) {
               <td className="num">{r.move} bps</td>
               <td className="num"><Tx hash={r.take.hash}>#{r.take.block} · {r.take.index}</Tx></td>
               <td className="num"><Tx hash={r.cancel.hash}>#{r.cancel.block} · {r.cancel.index}</Tx></td>
-              <td><span className={"tag " + (r.sniperFoundNothing || r.deferredCancel ? "ok" : "v")}>{verdict(r)}</span></td>
+              <td><span className={"tag " + (r.sniperFoundNothing || r.deferredCancel || (!r.sniperFilled && r.staleCancel) ? "ok" : "v")}>{verdict(r)}</span></td>
               <td className="num"><When t={r.when} opts={{ month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }} /></td>
             </tr>
           ))}

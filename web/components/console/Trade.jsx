@@ -63,7 +63,18 @@ function Post() {
     if (S.price && !price) setPrice((Number(S.price.median) / 1e8).toFixed(8));
   }, [S.price]); // eslint-disable-line react-hooks/exhaustive-deps
   const adj = (bps) => S.price && setPrice(((Number(S.price.median) * (1 + bps / 10000)) / 1e8).toFixed(8));
-  const post = () => need() && act("Post", async () => {
+  const post = async () => {
+    if (!need()) return;
+    // A quote escrows WMON (ask) or tUSD (bid): approve that token for this book first if needed.
+    const token = side === "ask" ? ADDR.wmon : ADDR.usd;
+    const allowance = await pc.readContract({ address: token, abi: erc20Abi, functionName: "allowance", args: [S.wallet.address, BOOKS[book]] });
+    if (allowance < parseEther("1000000")) {
+      const ok = await act(`Approve ${side === "ask" ? "WMON" : "tUSD"}`, () => w({ address: token, abi: erc20Abi, functionName: "approve", args: [BOOKS[book], 2n ** 256n - 1n] }));
+      if (!ok) return;
+    }
+    return postNow();
+  };
+  const postNow = () => act("Post", async () => {
     const px = await fetchSignedPrice({ signers: S.signers });
     const raw = price.trim();
     const p = raw ? BigInt(Math.round(Number(raw) * 1e8)) : px.median;

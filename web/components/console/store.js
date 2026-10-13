@@ -56,9 +56,14 @@ export function errMsg(e) {
     const r = e.walk((x) => x instanceof ContractFunctionRevertedError);
     if (r && r.data?.errorName) {
       const args = (r.data.args || []).map((a) => (typeof a === "bigint" ? a.toString() : a)).join(", ");
+      if (/allowance/i.test(args)) return "the book can't move your tokens yet: press \"Approve both books\" first";
+      if (/balance/i.test(args)) return "not enough balance: wrap MON or claim tUSD first";
       return `${r.data.errorName}(${args})`;
     }
-    return e.shortMessage || e.message;
+    const m = e.shortMessage || e.message;
+    if (/allowance/i.test(m) || /allowance/i.test(e.details || "")) return "the book can't move your tokens yet: press \"Approve both books\" first";
+    if (/exceeds balance|insufficient/i.test(m)) return "not enough balance: wrap MON or claim tUSD first";
+    return m;
   }
   return e?.message || String(e);
 }

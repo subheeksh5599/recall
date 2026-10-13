@@ -1,6 +1,6 @@
 // The race: a maker's quote goes stale, a sniper pays 50x the priority fee to take it, the maker
 // sends an ordinary cancel at the same moment. Same code drives the dashboard and the node runner.
-import { decodeEventLog, parseEther } from "viem";
+import { decodeEventLog, encodeFunctionData, parseEther } from "viem";
 import { ADDR, bookAbi, erc20Abi, fetchSignedPrice, moveBps } from "./chain.js";
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -70,6 +70,8 @@ export async function prepare(pc, wc, { wmon = parseEther("1.2"), log } = {}) {
  * mode "snipe": wait for a real move >= staleBps, then take the stale side vs cancel.
  * mode "dodge": no waiting; a fair take lands, the maker cancels with no move.
  */
+export const CANCEL_LAG_MS = 150;
+
 export async function race(pc, { maker, sniper, book, size = parseEther("0.5"), mode = "snipe", signers, onStep = () => {}, timeoutMs = 240_000 }) {
   const t0 = Date.now();
   const step = (k, data = {}) => onStep({ k, at: Date.now() - t0, ...data });
@@ -145,10 +147,24 @@ export async function race(pc, { maker, sniper, book, size = parseEther("0.5"), 
     fees(pc, 50n),
     fees(pc, 1n),
   ]);
-  const sendTake = sniper.writeContract({ ...takeReq, account: sniper.account, chain: sniper.chain, gas: (takeGas * 13n) / 10n, ...fSnipe });
-  const sendCancel = maker.writeContract({ ...cancelReq, account: maker.account, chain: maker.chain, gas: (cancelGas * 15n) / 10n + 150_000n, ...fMaker });
-  const [hTake, hCancel] = await Promise.all([sendTake, sendCancel]);
-  step("fired", { take: hTake, cancel: hCancel, sniperPrio: fSnipe.maxPriorityFeePerGas.toString(), makerPrio: fMaker.maxPriorityFeePerGas.toString() });
+  // Sign both transactions first so client-side work (nonce lookups, signing) gives neither side a head start.
+  const nonceOf = (acct) => acct.nonceManager
+    ? acct.nonceManager.consume({ address: acct.address, chainId: pc.chain.id, client: pc })
+    : pc.getTransactionCount({ address: acct.address, blockTag: "pending" });
+  const [nTake, nCancel] = await Promise.all([nonceOf(sniper.account), nonceOf(maker.account)]);
+  const base = { chainId: pc.chain.id, type: "eip1559", to: book };
+  const [rawTake, rawCancel] = await Promise.all([
+    sniper.account.signTransaction({ ...base, nonce: nTake, data: encodeFunctionData(takeReq), gas: (takeGas * 13n) / 10n, ...fSnipe }),
+    maker.account.signTransaction({ ...base, nonce: nCancel, data: encodeFunctionData(cancelReq), gas: (cancelGas * 15n) / 10n + 150_000n, ...fMaker }),
+  ]);
+  // Worst case for the maker: the sniper is faster. Its take goes out first; the maker's cancel follows
+  // CANCEL_LAG_MS later. On an ordinary book that head start is enough. On RECALL the take only queues,
+  // so a cancel that lands within the delay window still wins.
+  const pTake = pc.sendRawTransaction({ serializedTransaction: rawTake });
+  await sleep(CANCEL_LAG_MS);
+  const pCancel = pc.sendRawTransaction({ serializedTransaction: rawCancel });
+  const [hTake, hCancel] = await Promise.all([pTake, pCancel]);
+  step("fired", { take: hTake, cancel: hCancel, lagMs: CANCEL_LAG_MS, sniperPrio: fSnipe.maxPriorityFeePerGas.toString(), makerPrio: fMaker.maxPriorityFeePerGas.toString() });
   const [rTake, rCancel] = await Promise.all([
     pc.waitForTransactionReceipt({ hash: hTake, pollingInterval: 400 }),
     pc.waitForTransactionReceipt({ hash: hCancel, pollingInterval: 400 }),

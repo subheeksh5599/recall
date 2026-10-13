@@ -13,7 +13,7 @@ const STEP_TEXT = {
   posted: (s) => `Maker posted ask #${s.askId} and bid #${s.bidId} at that price`,
   watch: (s) => `Watching: ${s.move} bps from the posted price`,
   stale: (s) => `Quote #${s.target} is ${s.move} bps off. Firing both transactions`,
-  fired: () => `Sniper take sent at 50× priority, maker cancel at 1×`,
+  fired: (s) => `Sniper take sent first at 50× priority; maker cancel ${s.lagMs ?? 0} ms later at 1×`,
   landed: (s) => `Take landed in #${s.take.block} at index ${s.take.index} (${s.take.events.join(", ")}). Cancel in #${s.cancel.block} at index ${s.cancel.index} (${s.cancel.events.join(", ")})`,
 };
 
@@ -97,7 +97,7 @@ function Burners() {
 }
 
 function Result({ r }) {
-  const won = r.mode === "dodge" ? r.deferredCancel : r.sniperFoundNothing;
+  const won = r.mode === "dodge" ? r.deferredCancel : !r.sniperFilled;
   return (
     <div className="card">
       <div className="verdict" style={{ borderColor: won ? "#22c55e" : "var(--v)" }}>
@@ -108,9 +108,15 @@ function Result({ r }) {
           <div className="stat"><div className="l">Maker cancel</div><div className="mono" style={{ marginTop: 6 }}><Tx hash={r.cancel.hash} /> · block #{String(r.cancel.block)} · index {r.cancel.index}</div></div>
         </div>
         <p className="note" style={{ marginTop: 12 }}>
-          {r.cancelFirst
-            ? (r.mode === "dodge" ? "The cancel carried no stale proof, so it was applied after the waiting take settled." : "The take was queued for the delay. The cancel carried a signed price past the threshold, so it removed the quote first and the take was refunded.")
-            : "On the ordinary book the take filled in the transaction that carried it. The cancel arrived to a filled order."}
+          {r.mode === "dodge"
+            ? (r.deferredCancel ? "The cancel carried no stale proof, so it was applied after the waiting take settled." : "The cancel was not deferred on this book, so the maker could pull the quote.")
+            : r.sniperFoundNothing
+              ? "The take landed first but only queued for the delay. The cancel carried a signed price past the threshold and landed inside that window, so it removed the quote first and the take was refunded."
+              : !r.sniperFilled && r.staleCancel
+                ? "The cancel landed before the take, so the take found no quote to fill."
+                : r.cancelFirst
+                  ? `The cancel landed in block #${r.cancel.block}, after the take's wait had ended, so the take settled first. A cancel only wins if it lands inside the delay window.`
+                  : "On the ordinary book the take filled in the transaction that carried it. The cancel arrived to a filled order."}
           {r.settle && <> Settlement: <Tx hash={r.settle} />.</>}
         </p>
       </div>
