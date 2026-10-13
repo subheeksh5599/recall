@@ -6,20 +6,20 @@
 
 ![status](https://img.shields.io/badge/status-live%20on%20testnet-e42b0c) ![ci](https://github.com/subheeksh5599/recall/actions/workflows/test.yml/badge.svg) ![tests](https://img.shields.io/badge/forge%20tests-30%20passing-0f7a3d) ![verified](https://img.shields.io/badge/source-verified%20exact%20match-0f7a3d) ![network](https://img.shields.io/badge/network-Monad%20testnet-836EF9) ![stack](https://img.shields.io/badge/stack-Solidity%20%C2%B7%20Foundry%20%C2%B7%20Next.js%20%C2%B7%20viem-14151a) ![license](https://img.shields.io/badge/license-MIT-yellow)
 
-**[Live site](https://different-skunk-560.convex.site) · [Console](https://different-skunk-560.convex.site/app)** ·
+**[Live site](https://different-skunk-560.convex.site) · [Console (try it)](https://different-skunk-560.convex.site/app) · [Contracts on explorer](https://testnet.monadexplorer.com/address/0x4Fa264Efc5DDa93c51f98cB9d5A25E81b4801916)**
 
-[Run it](#run-it) · [Measured on mainnet](#measured-on-a-live-monad-book) · [Live races](#live-races-on-monad-testnet) · [The rule](#the-rule) · [Why Monad](#why-monad) · [Evidence](docs/EVIDENCE.md) · [Attack → test](#attack--test) · [Honesty table](#whats-real-vs-pending--the-honesty-table)
+[At a glance](#at-a-glance) · [Run it](#run-it) · [Measured on mainnet](#measured-on-a-live-monad-book) · [Live races](#live-races-on-monad-testnet) · [The rule](#the-rule) · [Why Monad](#why-monad) · [Evidence](docs/EVIDENCE.md) · [Attack → test](#attack--test) · [Honesty table](#whats-real-vs-pending--the-honesty-table)
 
 </div>
 
 **Status: deployed on Monad testnet.** Both books, the signed-price verifier and the quote token
-are live. The console (`web/`, Next.js) trades against them from any browser wallet, and the race
-below was run on both books with real transactions. The rows that are still open say so.
+are live. The console (`web/`, Next.js) trades against them from any browser wallet, and the races
+below were run on both books with real transactions. The rows that are still open say so.
 
 A market maker posts prices. The market moves. The maker sends a cancel; a sniper sends a trade
 against the old price. On an ordinary on-chain book the transaction with the bigger fee usually
 lands first, so the sniper usually wins, and the maker's answer is to quote wider for everyone.
-RECALL changes one rule: trades wait one block, cancels do not, and a cancel only gets ahead of a
+RECALL changes one rule: trades wait two blocks, cancels do not, and a cancel only gets ahead of a
 waiting trade when a signed price proves the quote really went stale.
 
 ```
@@ -28,6 +28,47 @@ SNIPED  ≠  CANCELLED  ≠  DODGED
 
 A cancel that protects a stale quote wins. A cancel that tries to dodge a fair customer loses.
 The contract tells them apart from a signed price, not from anyone's say-so.
+
+## At a glance
+
+> **Track:** Onchain Finance & Trading · **Team:** Subheeksh (solo developer) · **Built:** within the Sep 1 – Oct 13, 2026 window · **License:** MIT
+
+| | |
+|---|---|
+| **Problem** | On an on-chain order book, a market maker's quote goes stale the moment the price moves. A sniper pays a higher fee, lands first and trades against the old price. Makers pay for it by quoting thin and wide, and every trader pays the spread. |
+| **Evidence it is real on Monad** | We measured a live MON/USDC order book on Monad mainnet for 24 hours: **5,188 fills, 14.9% of them hit a quote the outside market had already moved ≥10 bps through**, and makers re-posted **~123 orders per fill** to defend. Script and raw data in the repo. |
+| **Solution** | RECALL, an order book contract with one rule: **trades wait 2 blocks (<1 s on Monad), cancels don't, and a cancel may overtake a waiting trade only if it carries a signed price proving the quote moved ≥ the stale threshold.** Snipers lose; makers still cannot dodge fair trades. |
+| **What's new** | Cancel priority exists on some fast venues, but as a blanket rule that hands makers a free option to dodge fair orders. RECALL gates the cancel on a signed price verified inside the contract (3 of 5 independent signers, median, max age 60 s), and does it as a plain contract: no chain change, no off-chain sequencer. |
+| **Why Monad** | ~0.4 s blocks make a 2-block wait nearly free; fee priority is the default ordering, which is exactly the race this removes; gas is charged on the limit, so settlement work is capped per call. |
+| **Proof it works** | Same contract deployed twice (rule on / rule off) and raced with real transactions. Sniper at **50× priority fee lands first in the block on both books**: on the ordinary book it fills the stale quote; on RECALL it **finds nothing and is refunded** (e.g. block #70742447: take index 1, cancel index 3). A maker trying to dodge a fair take is deferred and the take fills. |
+| **Quality** | 30 Foundry tests (one per guarantee/attack, fuzz, 2 invariants), all 4 contracts source-verified (exact match), CI on every push, receipts for every recorded race re-checkable with one command. |
+| **Live product** | Next.js console on Convex: connect any wallet, wrap MON, claim test dollars, post/take/cancel with live signed prices, settle the queue, run the sniper race on either book, live event feed, contract registry. |
+| **Stack** | Solidity 0.8.28 · Foundry · Next.js 16 (static export, React only) · viem · Convex static hosting · Alchemy RPC (Monad testnet) with public fallback · signed MON/USD price packages verified on-chain |
+| **Status** | Live on Monad testnet. Open items are listed in the [honesty table](#whats-real-vs-pending--the-honesty-table). |
+
+### Repository map
+
+| Path | What it is |
+|---|---|
+| `contracts/src/RecallBook.sol` | the order book: post, take (queued), cancel (price-gated), settle; `cancelFirst` flag turns the rule off for the comparison book |
+| `contracts/src/SignedPrice.sol` | on-chain verifier for signed price packages: fixed signer set, threshold, median, freshness, malleability and replay checks |
+| `contracts/src/TestUSD.sol` | ownerless testnet quote token, 1,000 per address per hour |
+| `contracts/test/` | `Rule.t.sol` (every guarantee and attack), `SignedPriceReal.t.sol` (real production signatures), invariants |
+| `web/` | Next.js app: landing page and the sidebar console (`web/components/console/*`), shared chain code in `web/lib/` |
+| `app/scripts/` | CLI race, live-book measurement, gas report, evidence verifier, browser end-to-end tests |
+| `app/evidence/` | JSON receipts for every recorded race, the 24 h mainnet measurement, gas report |
+| `hosting/` | Convex static hosting config and routes |
+| `docs/EVIDENCE.md` | sources: research, trader reports, venues with cancel priority, Monad docs |
+
+### How it works (one picture)
+
+```
+ block N        maker posts quote (+ signed price P0)          ── applies now
+ block N+k      price moves; sniper sends take @ 50× fee        ── QUEUED, cannot fill before N+k+2
+ block N+k      maker sends cancel + signed price P1            ── |P1−P0| ≥ stale bps?  yes → quote removed now
+ block N+k+2    any call settles the queue, oldest first        ── take finds nothing → refunded
+                                                                   no proof → cancel deferred, take fills
+```
 
 ## Live status
 
@@ -41,14 +82,15 @@ The contract tells them apart from a signed price, not from anyone's say-so.
 | Console (sidebar dashboard) | trades, cancels, settles, races; reads only the chain | [Run it](#run-it) |
 | Measured stale-fill loss on a live Monad book | measured: 24 h, 5,188 fills, every fill priced against a 1-second outside reference | [Measured on a live Monad book](#measured-on-a-live-monad-book) |
 | Source verification | all 4 deployed contracts, exact match (creation + runtime) | [Deployments](#deployments) |
-| CI | `forge build` + `forge test` on every push | `.github/workflows/test.yml` |
+| CI | `forge build` + `forge test`, and the web build, on every push | `.github/workflows/test.yml` |
+| RPC | Alchemy (Monad testnet) for reads and transactions, public endpoint as fallback and for log scans | [Run it](#run-it) |
 
 ## The 20-second pitch
 
 Snipers take money from market makers every time the price moves faster than a cancel can land.
 Makers pass that cost on as a wider spread, so every ordinary trader pays it. The fix fast trading
 venues use is to let cancels land before trades. On a 12-second chain that delay is unusable. On
-Monad a block is about 0.4 seconds, so a trade waiting one block barely notices, and the rule can
+Monad a block is about 0.4 seconds, so a trade waiting two blocks barely notices, and the rule can
 live in a plain contract with nothing changed in the chain. RECALL adds one thing the old rule
 lacks: a cancel only jumps the queue when a signed price shows the quote went stale, so a maker
 cannot use it to back out of a fair trade.
@@ -226,6 +268,8 @@ WMON=0xFb8b... STALE_BPS=5 ./script/with-account.sh bash -c \
 
 ## Table of contents
 
+- [At a glance](#at-a-glance)
+
 - [Measured on a live Monad book](#measured-on-a-live-monad-book)
 - [Deployments](#deployments)
 - [Live races on Monad testnet](#live-races-on-monad-testnet)
@@ -239,7 +283,7 @@ WMON=0xFb8b... STALE_BPS=5 ./script/with-account.sh bash -c \
 - [What "stale" means](#what-stale-means)
 - [Where the guarantee is enforced](#where-the-guarantee-is-enforced)
 - [Attack → test](#attack--test)
-- [What the demo will show](#what-the-demo-will-show)
+- [What the demo shows](#what-the-demo-shows)
 - [What's real vs pending — the honesty table](#whats-real-vs-pending--the-honesty-table)
 - [Limitations](#limitations)
 - [Build plan](#build-plan)
@@ -251,7 +295,7 @@ WMON=0xFb8b... STALE_BPS=5 ./script/with-account.sh bash -c \
    order needs no wait.
 2. **Trades that take liquidity wait.** A take submitted in block `N` is queued, not matched.
 3. **Waiting trades settle first.** Every call into the book first settles all queued takes from
-   blocks `≤ N − D` (`D` = the delay, 1 by default), oldest first, then does its own work.
+   blocks `≤ N − D` (`D` = the delay; 2 in the deployed book), oldest first, then does its own work.
 4. **A same-window cancel beats a waiting trade only if the quote went stale.** The cancel carries
    a signed price. If that price has moved more than the market's staleness threshold since the
    quote was posted, the cancel removes the quote before the waiting trade can fill against it.
@@ -283,8 +327,8 @@ already enforce cancel priority: [docs/EVIDENCE.md](docs/EVIDENCE.md).
 
 ## Why Monad
 
-- **The delay is cheap.** One block is roughly 0.4 seconds. The same rule on a 12-second chain
-  would make every trade wait 12 seconds.
+- **The delay is cheap.** A block is roughly 0.4 seconds, so the deployed 2-block wait is under a second.
+  The same rule on a 12-second chain would make every trade wait 24 seconds.
 - **Fee priority is the default ordering.** Higher fees usually go first, which is exactly the race
   this rule takes away.
 - **Fees are charged on the gas limit, not the gas used.** Settlement work is capped per call so a
