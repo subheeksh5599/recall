@@ -56,5 +56,6 @@ signed price proves the quote went stale, so a maker cannot use it to back out o
 
 - **Proves:** sniping stale quotes is a measured cost; several fast venues fixed it in 2026; Monad's
   two order books have not.
-- **Does not prove:** how much Monad market makers lose today. That figure comes from replaying a
-  live Monad book's trade history, which is on the build plan and not done yet.
+- **Measured since:** how often Monad makers are hit today. 24 h on a live Monad mainnet MON/USDC book:
+  14.9% of 5,188 fills hit a quote already ≥10 bps stale; ~123 orders posted per fill. See the README section
+  "Measured on a live Monad book" and `app/evidence/live-book-measurement.json`.

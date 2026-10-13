@@ -8,7 +8,7 @@
 
 **[Live site](https://different-skunk-560.convex.site) · [Console (try it)](https://different-skunk-560.convex.site/app) · [Contracts on explorer](https://testnet.monadexplorer.com/address/0x4Fa264Efc5DDa93c51f98cB9d5A25E81b4801916)**
 
-[At a glance](#at-a-glance) · [Run it](#run-it) · [Measured on mainnet](#measured-on-a-live-monad-book) · [Live races](#live-races-on-monad-testnet) · [The rule](#the-rule) · [Why Monad](#why-monad) · [Evidence](docs/EVIDENCE.md) · [Attack → test](#attack--test) · [Honesty table](#whats-real-vs-pending--the-honesty-table)
+[At a glance](#at-a-glance) · [The problem](#the-problem-were-solving) · [Run it](#run-it) · [Measured on mainnet](#measured-on-a-live-monad-book) · [Live races](#live-races-on-monad-testnet) · [The rule](#the-rule) · [Why Monad](#why-monad) · [Evidence](docs/EVIDENCE.md) · [Attack → test](#attack--test) · [Honesty table](#whats-real-vs-pending--the-honesty-table)
 
 </div>
 
@@ -69,6 +69,57 @@ The contract tells them apart from a signed price, not from anyone's say-so.
  block N+k+2    any call settles the queue, oldest first        ── take finds nothing → refunded
                                                                    no proof → cancel deferred, take fills
 ```
+
+## The problem we're solving
+
+**In one sentence:** on an on-chain order book, the market maker who provides the prices loses money every
+time the price moves, because a sniper paying a higher fee can trade against the old quote before the
+maker's cancel lands, and makers pass that loss on to every trader as wider spreads and thinner books.
+
+**Step by step:**
+
+1. A market maker posts "I sell MON at $0.02430".
+2. The real market moves to $0.02445. The quote is now stale: it sells below the market price.
+3. The maker sends a cancel. At the same instant a sniper sends a buy against the old quote.
+4. The chain orders transactions by fee. The sniper pays 50× more and lands first.
+5. The sniper buys cheap and the maker loses. Repeat on every price move.
+6. To survive, makers quote **wider** (worse prices for everyone), **smaller** (less depth) and **re-post
+   constantly** (we measured ~123 orders per fill on Monad). Ordinary traders pay this cost in every trade.
+
+**Why the obvious fix fails:** letting every cancel jump every trade protects makers, but it also lets a
+maker who sees a fair order coming pull the quote and dodge it. That free option is why US regulators
+rejected an exchange speed bump in 2020. RECALL keeps the protection and removes the dodge: a cancel only
+overtakes a waiting trade when a **signed price proves the quote really went stale**.
+
+### Evidence the problem is real
+
+**Measured on Monad mainnet (our own data, reproducible):**
+24 hours on a live MON/USDC order book, 5,188 fills, $457K traded. **14.9% of fills (774) hit a quote the
+outside market had already moved ≥10 bps through.** Makers posted ~123 orders per fill to defend themselves.
+Script: `app/scripts/measure-live-book.mjs`. Raw data, one row per fill with tx hash: `app/evidence/live-book-fills.json`.
+Details: [Measured on a live Monad book](#measured-on-a-live-monad-book).
+
+**Research:**
+
+| Finding | Source |
+|---|---|
+| Sniping stale quotes is about **20% of trading volume** and **17–33% of the cost of liquidity** in the markets studied | Budish, Cramton, Kyle, Lee, Malec, *Flow Trading*: http://www.cramton.umd.edu/papers2020-2024/budish-cramton-kyle-lee-malec-flow-trading-slides.pdf |
+| Continuous order books create a speed race that taxes liquidity providers | Budish, Cramton, Shim, *The High-Frequency Trading Arms Race* (QJE): http://conference.nber.org/confer/2013/MDf13/Budish_Cramton_Shim.pdf |
+| On-chain market makers cancel far more than they fill; slow confirmation lets the market move before a cancel lands | https://alearesearch.substack.com/p/risextrade |
+
+**What traders say (Reddit):**
+
+| Post | What they say | Link |
+|---|---|---|
+| r/CryptoCurrency, 6 Sep 2026: "Why continuous order books force market makers to widen your spreads (and why faster internet won't fix it)" | "the largest tax active traders pay on continuous order books is latency arbitrage … older quotes sit stale … HFTs … win the race to hit those stale quotes before the market maker can update them" | https://reddit.com/r/CryptoCurrency/comments/1w8sjq6/ |
+| r/Kalshi, 11 Jul 2026: "Liquidity pulls" | "Market makers pull during play due to uncertainty - their posted orders are handled by high frequency systems meant to prevent them getting sniped" | https://reddit.com/r/Kalshi/comments/1utyslo/liquidity_pulls/owzlpfy/ |
+| r/CryptoTechnology, 22 Feb 2026: "Adverse Selection in DeFi: Why AMMs Treat Every Trader Like They're Front-Running You" | "AMMs can't distinguish between informed flow … and uninformed flow … So they price in adverse selection for every trade" | https://reddit.com/r/CryptoTechnology/comments/1r841bc/adverse_selection_in_defi_why_amms_treat_every/o6rhuvz/ |
+| r/solana, 29 May 2026: "Solana Spreads: The Black Hole Begins" | maker competition and spreads on an on-chain order book | https://reddit.com/r/solana/comments/1tqzr46/solana_spreads_the_black_hole_begins_by_sam/ |
+
+**Fast venues already treat this as a real problem.** Several venues built in 2026 now give cancels priority
+over trades, enforced in their own chain or sequencer. Monad orders by fee and its order books match trades
+immediately, so nothing on Monad protects a maker yet. Every source, including venue docs and the 2020 regulatory
+decision: [docs/EVIDENCE.md](docs/EVIDENCE.md).
 
 ## Live status
 
@@ -269,6 +320,7 @@ WMON=0xFb8b... STALE_BPS=5 ./script/with-account.sh bash -c \
 ## Table of contents
 
 - [At a glance](#at-a-glance)
+- [The problem we're solving](#the-problem-were-solving)
 
 - [Measured on a live Monad book](#measured-on-a-live-monad-book)
 - [Deployments](#deployments)
